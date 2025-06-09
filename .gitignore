@@ -1,0 +1,42 @@
+# پوشه‌های بیلد و خروجی
+bin/
+obj/
+out/
+
+# تنظیمات شخصی ویژوال استودیو
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# فایل‌های لاگ و دیباگ
+*.log
+
+# فایل‌های موقتی و کش
+*.cache
+*.dbmdl
+*.pdb
+
+# پوشه‌های تست و آنالیز
+TestResults/
+*.coverage
+*.coveragexml
+
+# فایل‌های پکیج NuGet
+*.nupkg
+packages/
+*.snupkg
+
+# فایل‌های پیکربندی سیستمی یا لوکال
+appsettings.Development.json
+.env
+
+# Git فایل‌های سیستمی
+*.swp
+*.tmp
+*.bak
+
+# سیستم‌عامل
+Thumbs.db
+Desktop.ini
