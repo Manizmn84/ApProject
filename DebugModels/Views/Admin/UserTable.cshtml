@@ -1,0 +1,74 @@
+﻿userTable
+@model List<User>
+
+<div class="container mt-4">
+    <h2>Users Management</h2>
+
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Current Roles</th>
+                <th scope="col">Create Instructor</th>
+                <th scope="col">Create Student</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <th scope="row">@user.Id</th>
+                    <td>@user.first_name</td>
+                    <td>@user.last_name</td>
+                    <td>@user.email</td>
+                    <td>
+                        @if (user.UserRoles != null && user.UserRoles.Count > 0)
+                        {
+                            @foreach (var userRole in user.UserRoles)
+                            {
+                                <span class="badge bg-info me-1">@userRole.Role.name</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">No roles</span>
+                        }
+                    </td>
+                    <td>
+                        @{
+                            bool isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 1) ?? false;
+                            bool isStudent = user.UserRoles?.Any(ur => ur.RoleId == 2) ?? false;
+                        }
+
+                        @if (!isInstructor)
+                        {
+                            <a href="@Url.Action("CreateInstructor", new { userId = user.Id })"
+                               class="btn btn-sm btn-primary">Make Instructor</a>
+                        }
+                        else
+                        {
+                            <span class="text-success">Already Instructor</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!isStudent)
+                        {
+                            <a href="@Url.Action("CreateStudent", new { userId = user.Id })"
+                               class="btn btn-sm btn-success">Make Student</a>
+                        }
+                        else
+                        {
+                            <span class="text-success">Already Student</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a href="@Url.Action("CreateUser")" class="btn btn-primary">Add New User</a>
+</div>
+

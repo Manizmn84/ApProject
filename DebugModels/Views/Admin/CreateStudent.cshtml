@@ -1,0 +1,38 @@
+﻿@{
+    var user = ViewBag.User as User;
+}
+
+<div class="container mt-5">
+    <div class="card shadow rounded">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Create Student Profile</h4>
+                <small class="text-end">
+                    <strong>User:</strong> @user.first_name @user.last_name<br />
+                    <strong>Email:</strong> <span class="text-light">@user.email</span>
+                </small>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <form method="post" action="@Url.Action("CreateStudent")">
+                <input type="hidden" name="userId" value="@ViewBag.UserId" />
+
+                <div class="mb-3">
+                    <label for="enrollment_date" class="form-label">Enrollment Date</label>
+                    <input type="date"
+                           class="form-control"
+                           id="enrollment_date"
+                           name="enrollment_date"
+                           value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                           required>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end">
+                    <a href="@Url.Action("UserTable")" class="btn btn-outline-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-success">Create Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
