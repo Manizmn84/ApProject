@@ -1,26 +1,37 @@
-﻿userTable
-@model List<User>
+﻿@model List<User>
 
 <div class="container mt-4">
     <h2>Users Management</h2>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
     <table class="table table-striped">
         <thead class="thead-dark">
             <tr>
-                <th scope="col">#</th>
-                <th scope="col">First Name</th>
-                <th scope="col">Last Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Current Roles</th>
-                <th scope="col">Create Instructor</th>
-                <th scope="col">Create Student</th>
+                <th>#</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Current Roles</th>
+                <th>Instructor Role</th>
+                <th>Student Role</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var user in Model)
             {
+                var isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 1) ?? false;
+                var isStudent = user.UserRoles?.Any(ur => ur.RoleId == 2) ?? false;
+
                 <tr>
-                    <th scope="row">@user.Id</th>
+                    <td>@user.Id</td>
                     <td>@user.first_name</td>
                     <td>@user.last_name</td>
                     <td>@user.email</td>
@@ -37,31 +48,42 @@
                             <span class="text-muted">No roles</span>
                         }
                     </td>
-                    <td>
-                        @{
-                            bool isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 1) ?? false;
-                            bool isStudent = user.UserRoles?.Any(ur => ur.RoleId == 2) ?? false;
-                        }
 
+                    <!-- Instructor Column -->
+                    <td>
                         @if (!isInstructor)
                         {
-                            <a href="@Url.Action("CreateInstructor", new { userId = user.Id })"
+                            <a href="@Url.Action("CreateInstructor", "Admin", new { userId = user.Id })"
                                class="btn btn-sm btn-primary">Make Instructor</a>
                         }
                         else
                         {
-                            <span class="text-success">Already Instructor</span>
+                            <form asp-action="DeleteInstructor" method="post" asp-controller="Admin" style="display:inline;">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Are you sure you want to remove this instructor?');">
+                                    Remove Instructor
+                                </button>
+                            </form>
                         }
                     </td>
+
+                    <!-- Student Column -->
                     <td>
                         @if (!isStudent)
                         {
-                            <a href="@Url.Action("CreateStudent", new { userId = user.Id })"
+                            <a href="@Url.Action("CreateStudent", "Admin", new { userId = user.Id })"
                                class="btn btn-sm btn-success">Make Student</a>
                         }
                         else
                         {
-                            <span class="text-success">Already Student</span>
+                            <form asp-action="DeleteStudent" method="post" asp-controller="Admin" style="display:inline;">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Are you sure you want to remove this student?');">
+                                    Remove Student
+                                </button>
+                            </form>
                         }
                     </td>
                 </tr>
@@ -69,6 +91,7 @@
         </tbody>
     </table>
 
-    <a href="@Url.Action("CreateUser")" class="btn btn-primary">Add New User</a>
+    <a href="@Url.Action("CreateUser", "Admin")" class="btn btn-primary">Add New User</a>
 </div>
+
 

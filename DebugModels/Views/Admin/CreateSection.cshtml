@@ -1,0 +1,59 @@
+﻿@{
+    ViewBag.Title = "Create Section";
+}
+
+<h2>Create Section</h2>
+
+<form asp-action="CreateSection" method="post" style="max-width: 500px; display: flex; flex-direction: column; gap: 12px;">
+    <label>Course:</label>
+    <select name="courseId" required class="form-control">
+        <option value="">-- Select Course --</option>
+        @foreach (var course in ViewBag.Courses)
+        {
+            <option value="@course.CourseId">@course.Title (@course.Code)</option>
+        }
+    </select>
+
+    <label>Building:</label>
+    <input type="text" name="building" class="form-control" required />
+
+    <label>Room Number:</label>
+    <input type="number" name="roomNumber" class="form-control" required min="1" />
+
+    <label>Capacity:</label>
+    <input type="number" name="capacity" class="form-control" required min="1" />
+
+    <label>Select Days:</label>
+<div>
+    @foreach (var day in new[] { "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" })
+    {
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="days" value="@day" id="day_@day" />
+            <label class="form-check-label" for="day_@day">@day</label>
+        </div>
+    }
+</div>
+
+
+    <label>Start Time:</label>
+    <input type="time" name="startTime" class="form-control" required />
+
+    <label>End Time:</label>
+    <input type="time" name="endTime" class="form-control" required />
+
+    <label>Semester (0-8):</label>
+    <input type="number" name="semester" class="form-control" required min="0" max="8" />
+
+    <label>Year:</label>
+    <input type="number" name="year" class="form-control" required min="1300" max="1500" />
+
+    <button type="submit" class="btn btn-primary">Create Section</button>
+</form>
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger mt-3">@ViewBag.ErrorMessage</div>
+}
+
+
+

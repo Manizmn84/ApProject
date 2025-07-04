@@ -1,0 +1,26 @@
+﻿@{
+    ViewBag.Title = "Assign Instructor";
+    var section = ViewBag.Section as DebugModels.Models.Sections;
+    var instructors = ViewBag.Instructors as List<DebugModels.Models.Instructor>;
+}
+
+<h2>Assign Instructor to Section</h2>
+
+<form asp-action="AssignInstructor" method="post">
+    <input type="hidden" name="sectionId" value="@(section.SectionsId)" />
+
+    <label>Select Instructor:</label>
+    <select name="instructorId" class="form-control" required>
+        @foreach (var ins in instructors)
+        {
+            <option value="@ins.InstructorId">
+                @ins.User?.first_name @ins.User?.last_name (ID: @ins.InstructorId)
+            </option>
+        }
+    </select>
+
+    <button type="submit" class="btn btn-success mt-2">Assign</button>
+    <a class="btn btn-secondary mt-2" href="@Url.Action("SectionTable")">Cancel</a>
+</form>
+
+

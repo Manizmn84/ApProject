@@ -7,7 +7,6 @@ namespace DebugModels.Models
         public int SectionsId { get; set; }
         public int Semester {  get; set; }
         public int year {  get; set; }
-
         public int? TeachesId { get; set; }
         [ForeignKey("TeachesId")]
         public Teaches? Teaches { get; set; }
