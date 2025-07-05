@@ -270,6 +270,7 @@ namespace DebugModels.Controllers
                 return View(course);
             }
 
+
             var existing = _context.Courses.FirstOrDefault(c => c.CourseId == course.CourseId);
             if (existing == null)
             {
@@ -289,7 +290,7 @@ namespace DebugModels.Controllers
             return RedirectToAction("CourseTable");
         }
 
-       //
+        //
 
 
 
@@ -322,11 +323,13 @@ namespace DebugModels.Controllers
             ViewBag.ClassRooms = _context.ClassRooms.ToList();
             ViewBag.AllDays = new[] { "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" };
 
-            if (days == null || days.Length == 0)
+            if (days == null || days.Length != 1)
             {
-                ViewBag.ErrorMessage = "Please select at least one day.";
+                ViewBag.ErrorMessage = "You must select exactly one day for the section.";
                 return View();
             }
+
+            var day = days[0];
 
             var course = _context.Courses.FirstOrDefault(c => c.CourseId == courseId);
             if (course == null)
@@ -354,38 +357,41 @@ namespace DebugModels.Controllers
                 _context.SaveChanges();
             }
 
-            foreach (var day in days)
+            var overlapping = _context.Sections
+                .Include(s => s.TimeSlot)
+                .Include(s => s.ClassRoom)
+                .Where(s =>
+                    s.ClassRoom.RoomNumber == roomNumber &&
+                    s.ClassRoom.buliding == building &&
+                    s.Semester == semester &&
+                    s.year == year &&
+                    s.TimeSlot.Day == day)
+                .ToList();
+
+            foreach (var s in overlapping)
             {
-                var overlapping = _context.Sections
-                    .Include(s => s.TimeSlot)
-                    .Include(s => s.ClassRoom)
-                    .Where(s =>
-                        s.ClassRoom.RoomNumber == roomNumber &&
-                        s.ClassRoom.buliding == building &&
-                        s.Semester == semester &&
-                        s.year == year &&
-                        s.TimeSlot.Day == day)
-                    .ToList();
+                if (s.TimeSlot == null) continue;
 
-                foreach (var s in overlapping)
+                var existingStart = s.TimeSlot.StartTime.TimeOfDay;
+                var existingEnd = s.TimeSlot.EndTime.TimeOfDay;
+
+                bool overlap = startTs < existingEnd && endTs > existingStart;
+                if (overlap)
                 {
-                    if (s.TimeSlot == null) continue;
-
-                    var existingStart = s.TimeSlot.StartTime.TimeOfDay;
-                    var existingEnd = s.TimeSlot.EndTime.TimeOfDay;
-
-                    bool overlap = startTs < existingEnd && endTs > existingStart;
-                    if (overlap)
-                    {
-                        ViewBag.ErrorMessage = $"Conflict on {day}: Room {roomNumber} in {building} is already booked from {existingStart:hh\\:mm} to {existingEnd:hh\\:mm}.";
-                        return View("Index");
-                    }
+                    ViewBag.ErrorMessage = $"Conflict on {day}: Room {roomNumber} in {building} is already booked from {existingStart:hh\\:mm} to {existingEnd:hh\\:mm}.";
+                    return View();
                 }
             }
 
-            foreach (var day in days)
+      
+            var ts = _context.TimeSlots.FirstOrDefault(t =>
+                t.Day == day &&
+                t.StartTime.TimeOfDay == startTs &&
+                t.EndTime.TimeOfDay == endTs);
+
+            if (ts == null)
             {
-                var ts = new TimeSlot
+                ts = new TimeSlot
                 {
                     Day = day,
                     StartTime = DateTime.Today.Add(startTs),
@@ -393,23 +399,24 @@ namespace DebugModels.Controllers
                 };
                 _context.TimeSlots.Add(ts);
                 _context.SaveChanges();
-
-                var section = new Sections
-                {
-                    Course = course,
-                    ClassRoom = classRoom,
-                    TimeSlot = ts,
-                    Semester = semester,
-                    year = year
-                };
-
-                _context.Sections.Add(section);
             }
 
+            var section = new Sections
+            {
+                Course = course,
+                ClassRoom = classRoom,
+                TimeSlot = ts,
+                Semester = semester,
+                year = year
+            };
+
+            _context.Sections.Add(section);
             _context.SaveChanges();
-            TempData["SuccessMessage"] = "Sections created successfully for all selected days.";
+
+            TempData["SuccessMessage"] = "Section created successfully.";
             return RedirectToAction("SectionTable");
         }
+
 
         public IActionResult SectionTable()
         {
