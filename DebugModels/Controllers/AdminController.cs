@@ -329,6 +329,12 @@ namespace DebugModels.Controllers
                 return View();
             }
 
+            if (semester != 1 && semester != 2)
+            {
+                ViewBag.ErrorMessage = "Semester must be either 1 (Fall) or 2 (Spring).";
+                return View();
+            }
+
             var day = days[0];
 
             var course = _context.Courses.FirstOrDefault(c => c.CourseId == courseId);
@@ -337,6 +343,40 @@ namespace DebugModels.Controllers
                 ViewBag.ErrorMessage = "Invalid course.";
                 return View();
             }
+
+
+            var examDate = course.final_exam_date;
+
+            if (semester == 1)
+            {
+                
+                var fallStart = new DateTime(year, 9, 1); 
+                var fallEnd = new DateTime(year + 1, 1, 31);
+
+                if (examDate < fallStart || examDate > fallEnd)
+                {
+                    ViewBag.ErrorMessage = $"Exam date ({examDate:yyyy-MM-dd}) does not match Semester 1 (Sep {year} to Jan {year + 1}).";
+                    return View();
+                }
+            }
+            else if (semester == 2)
+            {
+                
+                var springStart = new DateTime(year, 2, 1); 
+                var springEnd = new DateTime(year, 7, 31);   
+
+                if (examDate < springStart || examDate > springEnd)
+                {
+                    ViewBag.ErrorMessage = $"Exam date ({examDate:yyyy-MM-dd}) does not match Semester 2 (Feb to July {year}).";
+                    return View();
+                }
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "Semester must be either 1 or 2.";
+                return View();
+            }
+
 
             if (!TimeSpan.TryParse(startTime, out var startTs) || !TimeSpan.TryParse(endTime, out var endTs) || startTs >= endTs)
             {
@@ -441,22 +481,31 @@ namespace DebugModels.Controllers
                 .Include(s => s.TimeSlot)
                 .FirstOrDefault(s => s.SectionsId == sectionId);
 
-            if (section != null)
-            {
-                if (section.TimeSlot != null)
-                    _context.TimeSlots.Remove(section.TimeSlot);
-
-                _context.Sections.Remove(section);
-                _context.SaveChanges();
-                TempData["SuccessMessage"] = "Section deleted successfully.";
-            }
-            else
+            if (section == null)
             {
                 TempData["ErrorMessage"] = "Section not found.";
+                return RedirectToAction("SectionTable");
             }
+
+            
+            bool isTimeSlotShared = _context.Sections
+                .Any(s => s.TimeSlotId == section.TimeSlotId && s.SectionsId != section.SectionsId);
+
+            
+            _context.Sections.Remove(section);
+
+            
+            if (!isTimeSlotShared && section.TimeSlot != null)
+            {
+                _context.TimeSlots.Remove(section.TimeSlot);
+            }
+
             _context.SaveChanges();
+            TempData["SuccessMessage"] = "Section deleted successfully.";
+
             return RedirectToAction("SectionTable");
         }
+
 
         ///
 

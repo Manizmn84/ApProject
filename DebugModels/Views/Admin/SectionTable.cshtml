@@ -3,7 +3,6 @@
 @{
     ViewBag.Title = "Sections Table";
 
-    // گروه‌بندی دستی با Key ترکیبی بدون استفاده از GroupBy LINQ
     var mergedSections = Model
         .Where(s => s.Course != null && s.ClassRoom != null && s.TimeSlot != null)
         .GroupBy(s => new
