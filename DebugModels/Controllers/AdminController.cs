@@ -239,28 +239,38 @@ namespace DebugModels.Controllers
             var course = _context.Courses.FirstOrDefault(c => c.CourseId == id);
             if (course == null)
             {
-                ViewBag.ErrorMessage = "Course not found!";
-                return View("Index");
+                TempData["ErrorMessage"] = "Course not found!";
+                return RedirectToAction("CourseTable");
+            }
+
+            var relatedSections = _context.Sections
+                .Where(s => s.Course != null && s.Course.CourseId == id)
+                .Include(s => s.Teaches)
+                .Include(s => s.TimeSlot)
+                .ToList();
+
+            foreach (var section in relatedSections)
+            {
+                
+                if (section.Teaches != null)
+                    _context.Teaches.Remove(section.Teaches);
+                
+                bool isTimeSlotShared = _context.Sections
+                    .Any(s => s.TimeSlotId == section.TimeSlotId && s.SectionsId != section.SectionsId);
+
+                if (!isTimeSlotShared && section.TimeSlot != null)
+                    _context.TimeSlots.Remove(section.TimeSlot);
+
+                _context.Sections.Remove(section);
             }
 
             _context.Courses.Remove(course);
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "Course deleted successfully.";
+            TempData["SuccessMessage"] = "Course and related sections were deleted successfully.";
             return RedirectToAction("CourseTable");
         }
 
-        public IActionResult EditCourse(int id)
-        {
-            var course = _context.Courses.FirstOrDefault(c => c.CourseId == id);
-            if (course == null)
-            {
-                ViewBag.ErrorMessage = "Course not found!";
-                return View("Index");
-            }
-
-            return View(course);
-        }
 
         [HttpPost]
         public IActionResult EditCourse(Course course)
@@ -479,6 +489,7 @@ namespace DebugModels.Controllers
         {
             var section = _context.Sections
                 .Include(s => s.TimeSlot)
+                .Include(s => s.Teaches) 
                 .FirstOrDefault(s => s.SectionsId == sectionId);
 
             if (section == null)
@@ -487,9 +498,15 @@ namespace DebugModels.Controllers
                 return RedirectToAction("SectionTable");
             }
 
-            
+           
             bool isTimeSlotShared = _context.Sections
                 .Any(s => s.TimeSlotId == section.TimeSlotId && s.SectionsId != section.SectionsId);
+
+            
+            if (section.Teaches != null)
+            {
+                _context.Teaches.Remove(section.Teaches);
+            }
 
             
             _context.Sections.Remove(section);
@@ -501,10 +518,11 @@ namespace DebugModels.Controllers
             }
 
             _context.SaveChanges();
-            TempData["SuccessMessage"] = "Section deleted successfully.";
+            TempData["SuccessMessage"] = "Section (and related instructor, if assigned) deleted successfully.";
 
             return RedirectToAction("SectionTable");
         }
+
 
 
         ///
@@ -627,11 +645,31 @@ namespace DebugModels.Controllers
             var instructor = _context.Instructors
                 .FirstOrDefault(i => i.UserId == userId);
 
-            if (instructor != null)
+            if (instructor == null)
             {
-                _context.Instructors.Remove(instructor);
+                TempData["ErrorMessage"] = "Instructor not found.";
+                return RedirectToAction("UserTable");
             }
 
+            
+            var teachesList = _context.Teaches
+                .Where(t => t.InstructorId == instructor.InstructorId)
+                .ToList();
+
+            foreach (var teach in teachesList)
+            {
+                
+                var section = _context.Sections.FirstOrDefault(s => s.TeachesId == teach.TeachesId);
+                if (section != null)
+                {
+                    section.TeachesId = null;
+                }
+
+               
+                _context.Teaches.Remove(teach);
+            }
+
+            
             var userRole = _context.UserRoles
                 .FirstOrDefault(ur => ur.UserId == userId && ur.RoleId == 1); 
 
@@ -640,10 +678,15 @@ namespace DebugModels.Controllers
                 _context.UserRoles.Remove(userRole);
             }
 
+            
+            _context.Instructors.Remove(instructor);
+
             _context.SaveChanges();
-            TempData["SuccessMessage"] = "Instructor removed successfully.";
+            TempData["SuccessMessage"] = "Instructor and related assignments removed successfully.";
+
             return RedirectToAction("UserTable");
         }
+
 
         public IActionResult DeleteStudent(int userId)
         {
