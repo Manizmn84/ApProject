@@ -1,0 +1,122 @@
+﻿@model List<DebugModels.Models.Sections>
+
+@{
+    ViewBag.Title = "Sections Table";
+
+    var mergedSections = Model
+        .Where(s => s.Course != null && s.ClassRoom != null && s.TimeSlot != null)
+        .GroupBy(s => new
+        {
+            s.Course.CourseId,
+            s.ClassRoomId,
+            s.TimeSlot.StartTime,
+            s.TimeSlot.EndTime,
+            s.Semester,
+            s.year,
+            InstructorId = s.Teaches?.Instructor?.User?.Id
+        })
+        .Select(g => new
+        {
+            Representative = g.First(),
+            Days = g.Select(x => x.TimeSlot.Day).Distinct().ToList()
+        })
+        .ToList();
+}
+
+<h2>Sections Table</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<table class="table table-bordered table-striped">
+    <thead class="thead-dark">
+        <tr>
+            <th>Course</th>
+            <th>Code</th>
+            <th>Room</th>
+            <th>Building</th>
+            <th>Capacity</th>
+            <th>Days</th>
+            <th>Time</th>
+            <th>Semester</th>
+            <th>Year</th>
+            <th>Instructor</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in mergedSections)
+        {
+            var sec = item.Representative;
+            var instructorUser = sec.Teaches?.Instructor?.User;
+            bool hasInstructor = instructorUser != null;
+
+            <tr>
+                <td>@sec.Course.Title</td>
+                <td>@sec.Course.Code</td>
+                <td>@sec.ClassRoom.RoomNumber</td>
+                <td>@sec.ClassRoom.buliding</td>
+                <td>@sec.ClassRoom.Capacity</td>
+                <td>@string.Join(", ", item.Days)</td>
+                <td>@sec.TimeSlot.StartTime.ToString("HH:mm") - @sec.TimeSlot.EndTime.ToString("HH:mm")</td>
+                <td>@sec.Semester</td>
+                <td>@sec.year</td>
+                <td>
+                    @if (hasInstructor)
+                    {
+                        <span class="text-success fw-bold">
+                            @($"{instructorUser.first_name} {instructorUser.last_name}")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Unassigned</span>
+                    }
+                </td>
+                <td>
+                    <form asp-action="DeleteSection" method="post" style="display:inline;">
+                        <input type="hidden" name="sectionId" value="@sec.SectionsId" />
+                        <button type="submit" class="btn btn-sm btn-danger mb-1"
+                                onclick="return confirm('Are you sure you want to delete this section?');">
+                            Delete
+                        </button>
+                    </form>
+                    <br />
+                    @if (hasInstructor)
+                    {
+                        <form asp-action="UnassignInstructor" method="post" style="display:inline;">
+                            <input type="hidden" name="sectionId" value="@sec.SectionsId" />
+                            <button type="submit" class="btn btn-sm btn-warning mt-1"
+                                    onclick="return confirm('Are you sure you want to unassign this instructor?');">
+                                Unassign Instructor
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-action="AssignInstructor"
+                           asp-route-sectionId="@sec.SectionsId"
+                           class="btn btn-sm btn-primary mt-1">
+                            Assign Instructor
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="mt-3">
+    <a class="btn btn-success" href="@Url.Action("CreateSection", "Admin")">➕ Create New Section</a>
+</div>
+
+
+
+
+

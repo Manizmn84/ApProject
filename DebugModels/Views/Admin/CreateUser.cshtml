@@ -1,0 +1,40 @@
+﻿@model DebugModels.Models.User
+
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<h2>Create New User</h2>
+
+<form asp-action="CreateUser" method="post">
+    <div class="mb-3">
+        <label asp-for="first_name" class="form-label"></label>
+        <input asp-for="first_name" class="form-control" />
+        <span asp-validation-for="first_name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="last_name" class="form-label"></label>
+        <input asp-for="last_name" class="form-control" />
+        <span asp-validation-for="last_name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="email" class="form-label"></label>
+        <input asp-for="email" class="form-control" />
+        <span asp-validation-for="email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="hashed_password" class="form-label"></label>
+        <input asp-for="hashed_password" class="form-control" />
+        <span asp-validation-for="hashed_password" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
