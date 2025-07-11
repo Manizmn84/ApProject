@@ -118,8 +118,8 @@ namespace DebugModels.Data
 
             modelBuilder.Entity<Takes>()
                 .HasOne(t => t.Sections)
-                .WithOne(s => s.Takes)
-                .HasForeignKey<Sections>(s => s.TakesId)
+                .WithMany(s => s.Takes) 
+                .HasForeignKey(t => t.SectionId)
                 .OnDelete(DeleteBehavior.SetNull);
         }
     }
