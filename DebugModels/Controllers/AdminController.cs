@@ -54,6 +54,106 @@ namespace DebugModels.Controllers
 
         }
 
+        public IActionResult CreateDepartment()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CreateDepartment(Department department)
+        {
+            if(!ModelState.IsValid)
+                return View(department);
+
+            var IsExistDepartments = _context.Departments.Any(dp => dp.Name.ToLower() == department.Name.ToLower());
+
+            if (IsExistDepartments)
+            {
+                ViewData["ExistDepartment"] = "We have Department with That Name";
+                return View(department);
+            }
+
+            var IsRepeatBuilding = _context.Departments.Any(dp => dp.Building.ToLower() == department.Building.ToLower());
+
+            if (IsRepeatBuilding)
+            {
+                ViewData["ExistDepartment"] = "In this Play have another Department";
+                return View(department);
+            }
+
+            _context.Departments.Add(department);
+            _context.SaveChanges();
+            TempData["SuccessMessage"] = "Department created successfully.";
+            return RedirectToAction("DepartmentTable");
+        }
+
+        [HttpGet]
+        public IActionResult EditDepartment(int id)
+        {
+            var department = _context.Departments.Find(id);
+            if (department == null)
+            {
+                ViewBag.ErrorMessage = "We dont have any Department with That ID";
+                return View("Index");
+            }
+
+            return View(department);
+        }
+
+        [HttpPost]
+        public IActionResult EditDepartment(Department department)
+        {
+            if (!ModelState.IsValid)
+                return View(department);
+
+            var isExist = _context.Departments
+                .Any(d => d.Name.ToLower() == department.Name.ToLower() && d.Id != department.Id);
+
+            if (isExist)
+            {
+                ViewData["ExistDepartment"] = "A department with that name already exists.";
+                return View(department);
+            }
+
+            var ExistingDepartment = _context.Departments.Find(department.Id);
+
+            if(ExistingDepartment == null)
+            {
+                ViewBag.ErrorMessage = "We don`t have department with that Id";
+                return View("Index");
+            }
+
+            ExistingDepartment.Name = department.Name;
+            ExistingDepartment.Budget = department.Budget;
+            ExistingDepartment.Building = department.Building;
+
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Department updated successfully.";
+            return RedirectToAction("DepartmentTable");
+        }
+
+        //[HttpPost]
+        //public IActionResult DeleteDepartment(int id)
+        //{
+        //    var department = _context.Departments.Find(id);
+        //    if (department == null)
+        //    {
+        //        TempData["ErrorMessage"] = "Department not found.";
+        //        return RedirectToAction("DepartmentTable");
+        //    }
+        //
+        //    return View(department);
+        //}
+
+
+        public IActionResult DepartmentTable()
+        {
+            var departments = _context.Departments.ToList();
+            return View(departments);
+        }
+
+
         public IActionResult CreateInstructor(int userId)
         {
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);

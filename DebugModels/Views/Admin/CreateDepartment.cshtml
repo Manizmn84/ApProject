@@ -1,0 +1,40 @@
+﻿@model DebugModels.Models.Department
+
+@{
+    ViewData["Title"] = "Create Department";
+}
+
+<h2>Create New Department</h2>
+
+@if (ViewData["ExistDepartment"] != null)
+{
+    <div class="alert alert-danger">
+        @ViewData["ExistDepartment"]
+    </div>
+}
+
+<form asp-action="CreateDepartment" method="post">
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Building" class="form-label"></label>
+        <input asp-for="Building" class="form-control" />
+        <span asp-validation-for="Building" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Budget" class="form-label"></label>
+        <input asp-for="Budget" class="form-control" />
+        <span asp-validation-for="Budget" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
