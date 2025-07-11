@@ -10,6 +10,8 @@ namespace DebugModels.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
 
-        public List<Sections> Sections { get; set; }
+        #region
+        public List<Sections>? Sections { get; set; }
+        #endregion
     }
 }

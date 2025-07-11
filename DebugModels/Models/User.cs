@@ -19,10 +19,12 @@ namespace DebugModels.Models
         [StringLength(50,MinimumLength =6)]
         public string hashed_password { get; set; } = null!;
 
-        public List<UserRole> UserRoles {  get; set; }
+        #region
+        public List<UserRole>? UserRoles {  get; set; }
 
-        public List<Instructor> Instructors { get; set; }
+        public List<Instructor>? Instructors { get; set; }
         
-        public List<Student> Students { get; set; } 
+        public List<Student>? Students { get; set; }
+        #endregion
     }
 }

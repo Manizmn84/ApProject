@@ -11,22 +11,18 @@ namespace DebugModels.Models
         public string Title { get; set; } = null!;
 
         [StringLength(255)]
-        [Required]
-        public string Code { get; set; } = null!;
-
-        [StringLength(255)]
         public string Unit { get; set; } = null!;
 
-        [StringLength(255)]
-        public string Description { get; set; } = null!;
+        #region
+        public int? DepartmentId { get; set; }
 
-        public DateTime final_exam_date { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
 
-        public int? SectionsId { get; set; }
+        public List<Sections>? Sections { get; set; }
 
-        [ForeignKey("SectionsId")]
-        public Sections? Sections { get; set; }
-
+        public List<PreRegs>? PreRegs { get; set; }
+        #endregion
     }
 }
 

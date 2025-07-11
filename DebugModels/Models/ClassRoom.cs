@@ -9,7 +9,9 @@ namespace DebugModels.Models
         public string buliding { set; get; } = null!;
         public int RoomNumber { get; set; }
         public int Capacity { get; set; }
-
-        public List<Sections> Sections { get; set; }
+        
+        #region
+        public List<Sections>? Sections { get; set; }
+        #endregion
     }
 }

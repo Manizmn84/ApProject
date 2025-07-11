@@ -9,10 +9,16 @@ namespace DebugModels.Models
         public decimal Salary { get; set; }
         public DateTime hire_date { set; get; }
 
+        #region relation
+        public int? DepartmentId { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
+
         public int? UserId { get; set; }
         [ForeignKey("UserId")]
         public User? User { get; set; }
 
-        public List<Teaches> Teaches { get; set; }
+        public List<Teaches>? Teaches { get; set; }
+        #endregion
     }
 }

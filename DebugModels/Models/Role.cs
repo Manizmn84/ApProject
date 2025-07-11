@@ -9,6 +9,8 @@ namespace DebugModels.Models
         [StringLength(50)]
         public string name { get; set; } = null!;
 
-        public List<UserRole> UserRoles { get; set; }
+        #region
+        public List<UserRole>? UserRoles { get; set; }
+        #endregion
     }
 }
