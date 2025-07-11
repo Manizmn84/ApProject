@@ -20,15 +20,21 @@
                 <th>Last Name</th>
                 <th>Email</th>
                 <th>Current Roles</th>
-                <th>Instructor Role</th>
-                <th>Student Role</th>
+
+                <!-- Instructor Columns -->
+                <th>Make Instructor</th>
+                <th>Remove Instructor</th>
+
+                <!-- Student Columns -->
+                <th>Make Student</th>
+                <th>Remove Student</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var user in Model)
             {
-                var isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 1) ?? false;
-                var isStudent = user.UserRoles?.Any(ur => ur.RoleId == 2) ?? false;
+                var isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 7) ?? false;
+                var isStudent = user.UserRoles?.Any(ur => ur.RoleId == 8) ?? false;
 
                 <tr>
                     <td>@user.Id</td>
@@ -49,14 +55,14 @@
                         }
                     </td>
 
-                    <!-- Instructor Column -->
+                    <!-- Make Instructor -->
                     <td>
-                        @if (!isInstructor)
-                        {
-                            <a href="@Url.Action("CreateInstructor", "Admin", new { userId = user.Id })"
-                               class="btn btn-sm btn-primary">Make Instructor</a>
-                        }
-                        else
+                        <a href="@Url.Action("CreateInstructor", "Admin", new { userId = user.Id })"
+                           class="btn btn-sm btn-primary">Make Instructor</a>
+                    </td>
+                    <!-- Remove Instructor -->
+                    <td>
+                        @if (isInstructor)
                         {
                             <form asp-action="DeleteInstructor" method="post" asp-controller="Admin" style="display:inline;">
                                 <input type="hidden" name="userId" value="@user.Id" />
@@ -68,14 +74,14 @@
                         }
                     </td>
 
-                    <!-- Student Column -->
+                    <!-- Make Student -->
                     <td>
-                        @if (!isStudent)
-                        {
-                            <a href="@Url.Action("CreateStudent", "Admin", new { userId = user.Id })"
-                               class="btn btn-sm btn-success">Make Student</a>
-                        }
-                        else
+                        <a href="@Url.Action("CreateStudent", "Admin", new { userId = user.Id })"
+                           class="btn btn-sm btn-success">Make Student</a>
+                    </td>
+                    <!-- Remove Student -->
+                    <td>
+                        @if (isStudent)
                         {
                             <form asp-action="DeleteStudent" method="post" asp-controller="Admin" style="display:inline;">
                                 <input type="hidden" name="userId" value="@user.Id" />
@@ -93,5 +99,3 @@
 
     <a href="@Url.Action("CreateUser", "Admin")" class="btn btn-primary">Add New User</a>
 </div>
-
-

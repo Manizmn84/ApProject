@@ -164,13 +164,20 @@ namespace DebugModels.Controllers
                 return View("Index");
             }
 
+            var departments = _context.Departments
+                            .Where(dp => !dp.Instructors.Any(ins => ins.UserId == userId))
+                            .ToList();
+
+            ViewBag.Departments = departments;
+
+
             ViewBag.User = user;
             ViewBag.UserId = userId;
             return View();
         }
 
         [HttpPost]
-        public IActionResult CreateInstructor(int userId, decimal salary, DateTime hire_date)
+        public IActionResult CreateInstructor(Instructor instructor , int userId)
         {
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
@@ -179,18 +186,40 @@ namespace DebugModels.Controllers
                 return View("Index");
             }
 
-            var existingInstructor = _context.Instructors.FirstOrDefault(i => i.UserId == userId);
-            if (existingInstructor != null) 
+            var department = _context.Departments.Include(dp => dp.Instructors).FirstOrDefault(dp => dp.Id == instructor.DepartmentId);
+            if (department == null)
             {
-                ViewBag.ErrorMessage = "We already have Instructor with this ID";
+                ViewBag.ErrorMessage = "We dont have any department with that id ";
+                return View("Index");   
+            }
+
+            var existingInstructor = department.Instructors != null && department.Instructors.Any(ins => ins.UserId == userId);
+            if (existingInstructor) 
+            {
+                ViewBag.ErrorMessage = $"We already have Instructor for the User with Id : {userId} in the Department with Id : {instructor.DepartmentId}";
                 return View("Index");
             }
+
+            var totalSalary = _context.Instructors
+                                .Where(i => i.DepartmentId == instructor.DepartmentId)
+                                .Sum(i => i.Salary);
+
+            var DepartmentBudget = _context.Departments.Where(dp => dp.Id == instructor.DepartmentId).Select(dp => dp.Budget).FirstOrDefault();
+
+            if(totalSalary + instructor.Salary > DepartmentBudget)
+            {
+                TempData["ErrorMessage"] = "The Instructor Salary is more than Department Budget";
+                var usersData = _context.Users.Include(users => users.UserRoles).ThenInclude(userRole => userRole.Role).ToList();             
+                return View("UserTable", usersData);
+            }
+
 
             var Instructor = new Instructor
             {
                 UserId = userId,
-                Salary = salary,
-                hire_date = hire_date,
+                Salary = instructor.Salary,
+                hire_date = instructor.hire_date,
+                DepartmentId = instructor.DepartmentId,
 
             };
 
@@ -204,26 +233,25 @@ namespace DebugModels.Controllers
             }
 
             var existingUserRole = _context.UserRoles.FirstOrDefault(u => u.UserId == userId && u.RoleId == instructorRole.Id);
-
-            if (existingUserRole != null)
+            
+            if (existingUserRole == null)
             {
-                ViewBag.ErrorMessage = "User already has Instructor";
-                return View("Index");
+                var userRole = new UserRole
+                {
+                    UserId = userId,
+                    RoleId = instructorRole.Id,
+                };
+
+                _context.UserRoles.Add(userRole);
+                _context.SaveChanges();
             }
 
-            var userRole = new UserRole
-            {
-                UserId = userId,
-                RoleId = instructorRole.Id,
-            };
-
-            _context.UserRoles.Add(userRole);
-            _context.SaveChanges();
+            
 
             _context.Instructors.Add(Instructor);
             _context.SaveChanges();
-
-            return RedirectToAction("UserTable");
+            var users = _context.Users.Include(users => users.UserRoles).ThenInclude(userRole => userRole.Role).ToList();
+            return RedirectToAction("UserTable",users);
         }
 
 

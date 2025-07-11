@@ -1,6 +1,6 @@
-﻿createInstructor
-@{
-    var user = ViewBag.User as User;
+﻿@{
+    var user = ViewBag.User as DebugModels.Models.User;
+    var departments = ViewBag.Departments as List<DebugModels.Models.Department>;
 }
 
 <div class="container mt-4">
@@ -20,7 +20,7 @@
                            step="0.01"
                            class="form-control"
                            id="salary"
-                           name="salary"
+                           name="Salary"
                            placeholder="Enter salary amount"
                            required>
                     <div class="form-text">Enter salary in decimal format (e.g., 50000.00)</div>
@@ -37,6 +37,18 @@
                            required>
                 </div>
 
+                <!-- Select Department -->
+                <div class="mb-3">
+                    <label for="DepartmentId" class="form-label">Select Department</label>
+                    <select class="form-select" id="DepartmentId" name="DepartmentId" required>
+                        <option value="">-- Choose a department --</option>
+                        @foreach (var dept in departments)
+                        {
+                            <option value="@dept.Id">@dept.Name</option>
+                        }
+                    </select>
+                </div>
+
                 <!-- Submit Buttons -->
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <a href="@Url.Action("UserTable")" class="btn btn-secondary me-md-2">Cancel</a>
@@ -46,4 +58,3 @@
         </div>
     </div>
 </div>
-
