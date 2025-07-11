@@ -4,6 +4,7 @@ using DebugModels.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DebugModels.Migrations
 {
     [DbContext(typeof(ProjectContext))]
-    partial class ProjectContextModelSnapshot : ModelSnapshot
+    [Migration("20250711113658_ChangeModelDepartment")]
+    partial class ChangeModelDepartment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,7 +86,7 @@ namespace DebugModels.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Budget")
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Building")
                         .IsRequired()

@@ -204,28 +204,28 @@ namespace DebugModels.Controllers
             return View();
         }
 
-        [HttpPost]
-        public IActionResult CreateCourse(Course course)
-        {
-
-            if (!ModelState.IsValid)
-            {
-                return View(course);
-            }
-
-            var existing = _context.Courses.FirstOrDefault(c => c.Code == course.Code);
-            if (existing != null)
-            {
-                ViewBag.ErrorMessage = "A course with this code already exists.";
-                return View("Index");
-            }
-
-            _context.Courses.Add(course);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Course added successfully.";
-            return RedirectToAction("CourseTable");
-        }
+        //[HttpPost]
+        //public IActionResult CreateCourse(Course course)
+        //{
+        //
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return View(course);
+        //    }
+        //
+        //    var existing = _context.Courses.FirstOrDefault(c => c.Code == course.Code);
+        //    if (existing != null)
+        //    {
+        //        ViewBag.ErrorMessage = "A course with this code already exists.";
+        //        return View("Index");
+        //    }
+        //
+        //    _context.Courses.Add(course);
+        //    _context.SaveChanges();
+        //
+        //    TempData["SuccessMessage"] = "Course added successfully.";
+        //    return RedirectToAction("CourseTable");
+        //}
 
         public IActionResult CourseTable()
         {
@@ -272,33 +272,33 @@ namespace DebugModels.Controllers
         }
 
 
-        [HttpPost]
-        public IActionResult EditCourse(Course course)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(course);
-            }
-
-
-            var existing = _context.Courses.FirstOrDefault(c => c.CourseId == course.CourseId);
-            if (existing == null)
-            {
-                ViewBag.ErrorMessage = "Course not found!";
-                return View("Index");
-            }
-
-            existing.Title = course.Title;
-            existing.Code = course.Code;
-            existing.Unit = course.Unit;
-            existing.Description = course.Description;
-            existing.final_exam_date = course.final_exam_date;
-
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Course updated successfully.";
-            return RedirectToAction("CourseTable");
-        }
+        //[HttpPost]
+        //public IActionResult EditCourse(Course course)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return View(course);
+        //    }
+        //
+        //
+        //    var existing = _context.Courses.FirstOrDefault(c => c.CourseId == course.CourseId);
+        //    if (existing == null)
+        //    {
+        //        ViewBag.ErrorMessage = "Course not found!";
+        //        return View("Index");
+        //    }
+        //
+        //    existing.Title = course.Title;
+        //    existing.Code = course.Code;
+        //    existing.Unit = course.Unit;
+        //    existing.Description = course.Description;
+        //    existing.final_exam_date = course.final_exam_date;
+        //
+        //    _context.SaveChanges();
+        //
+        //    TempData["SuccessMessage"] = "Course updated successfully.";
+        //    return RedirectToAction("CourseTable");
+        //}
 
         //
 
@@ -315,157 +315,157 @@ namespace DebugModels.Controllers
             return View();
         }
 
-        [HttpPost]
-        public IActionResult CreateSection(
-            int courseId,
-            string building,
-            int roomNumber,
-            int capacity,
-            [FromForm] string[] days,
-            string startTime,
-            string endTime,
-            int semester,
-            int year)
-        {
-            ViewBag.Courses = _context.Courses
-                .Where(c => !_context.Sections.Any(s => s.Course.CourseId == c.CourseId))
-                .ToList();
-            ViewBag.ClassRooms = _context.ClassRooms.ToList();
-            ViewBag.AllDays = new[] { "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" };
-
-            if (days == null || days.Length != 1)
-            {
-                ViewBag.ErrorMessage = "You must select exactly one day for the section.";
-                return View();
-            }
-
-            if (semester != 1 && semester != 2)
-            {
-                ViewBag.ErrorMessage = "Semester must be either 1 (Fall) or 2 (Spring).";
-                return View();
-            }
-
-            var day = days[0];
-
-            var course = _context.Courses.FirstOrDefault(c => c.CourseId == courseId);
-            if (course == null)
-            {
-                ViewBag.ErrorMessage = "Invalid course.";
-                return View();
-            }
-
-
-            var examDate = course.final_exam_date;
-
-            if (semester == 1)
-            {
-                
-                var fallStart = new DateTime(year, 9, 1); 
-                var fallEnd = new DateTime(year + 1, 1, 31);
-
-                if (examDate < fallStart || examDate > fallEnd)
-                {
-                    ViewBag.ErrorMessage = $"Exam date ({examDate:yyyy-MM-dd}) does not match Semester 1 (Sep {year} to Jan {year + 1}).";
-                    return View();
-                }
-            }
-            else if (semester == 2)
-            {
-                
-                var springStart = new DateTime(year, 2, 1); 
-                var springEnd = new DateTime(year, 7, 31);   
-
-                if (examDate < springStart || examDate > springEnd)
-                {
-                    ViewBag.ErrorMessage = $"Exam date ({examDate:yyyy-MM-dd}) does not match Semester 2 (Feb to July {year}).";
-                    return View();
-                }
-            }
-            else
-            {
-                ViewBag.ErrorMessage = "Semester must be either 1 or 2.";
-                return View();
-            }
-
-
-            if (!TimeSpan.TryParse(startTime, out var startTs) || !TimeSpan.TryParse(endTime, out var endTs) || startTs >= endTs)
-            {
-                ViewBag.ErrorMessage = "Invalid or conflicting time.";
-                return View();
-            }
-
-            var classRoom = _context.ClassRooms.FirstOrDefault(cr => cr.RoomNumber == roomNumber && cr.buliding == building);
-            if (classRoom == null)
-            {
-                classRoom = new ClassRoom
-                {
-                    RoomNumber = roomNumber,
-                    buliding = building,
-                    Capacity = capacity
-                };
-                _context.ClassRooms.Add(classRoom);
-                _context.SaveChanges();
-            }
-
-            var overlapping = _context.Sections
-                .Include(s => s.TimeSlot)
-                .Include(s => s.ClassRoom)
-                .Where(s =>
-                    s.ClassRoom.RoomNumber == roomNumber &&
-                    s.ClassRoom.buliding == building &&
-                    s.Semester == semester &&
-                    s.year == year &&
-                    s.TimeSlot.Day == day)
-                .ToList();
-
-            foreach (var s in overlapping)
-            {
-                if (s.TimeSlot == null) continue;
-
-                var existingStart = s.TimeSlot.StartTime.TimeOfDay;
-                var existingEnd = s.TimeSlot.EndTime.TimeOfDay;
-
-                bool overlap = startTs < existingEnd && endTs > existingStart;
-                if (overlap)
-                {
-                    ViewBag.ErrorMessage = $"Conflict on {day}: Room {roomNumber} in {building} is already booked from {existingStart:hh\\:mm} to {existingEnd:hh\\:mm}.";
-                    return View();
-                }
-            }
-
-      
-            var ts = _context.TimeSlots.FirstOrDefault(t =>
-                t.Day == day &&
-                t.StartTime.TimeOfDay == startTs &&
-                t.EndTime.TimeOfDay == endTs);
-
-            if (ts == null)
-            {
-                ts = new TimeSlot
-                {
-                    Day = day,
-                    StartTime = DateTime.Today.Add(startTs),
-                    EndTime = DateTime.Today.Add(endTs)
-                };
-                _context.TimeSlots.Add(ts);
-                _context.SaveChanges();
-            }
-
-            var section = new Sections
-            {
-                Course = course,
-                ClassRoom = classRoom,
-                TimeSlot = ts,
-                Semester = semester,
-                year = year
-            };
-
-            _context.Sections.Add(section);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Section created successfully.";
-            return RedirectToAction("SectionTable");
-        }
+        //[HttpPost]
+        //public IActionResult CreateSection(
+        //    int courseId,
+        //    string building,
+        //    int roomNumber,
+        //    int capacity,
+        //    [FromForm] string[] days,
+        //    string startTime,
+        //    string endTime,
+        //    int semester,
+        //    int year)
+        //{
+        //    ViewBag.Courses = _context.Courses
+        //        .Where(c => !_context.Sections.Any(s => s.Course.CourseId == c.CourseId))
+        //        .ToList();
+        //    ViewBag.ClassRooms = _context.ClassRooms.ToList();
+        //    ViewBag.AllDays = new[] { "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" };
+        //
+        //    if (days == null || days.Length != 1)
+        //    {
+        //        ViewBag.ErrorMessage = "You must select exactly one day for the section.";
+        //        return View();
+        //    }
+        //
+        //    if (semester != 1 && semester != 2)
+        //    {
+        //        ViewBag.ErrorMessage = "Semester must be either 1 (Fall) or 2 (Spring).";
+        //        return View();
+        //    }
+        //
+        //    var day = days[0];
+        //
+        //    var course = _context.Courses.FirstOrDefault(c => c.CourseId == courseId);
+        //    if (course == null)
+        //    {
+        //        ViewBag.ErrorMessage = "Invalid course.";
+        //        return View();
+        //    }
+        //
+        //
+        //    var examDate = course.final_exam_date;
+        //
+        //    if (semester == 1)
+        //    {
+        //        
+        //        var fallStart = new DateTime(year, 9, 1); 
+        //        var fallEnd = new DateTime(year + 1, 1, 31);
+        //
+        //        if (examDate < fallStart || examDate > fallEnd)
+        //        {
+        //            ViewBag.ErrorMessage = $"Exam date ({examDate:yyyy-MM-dd}) does not match Semester 1 (Sep {year} to Jan {year + 1}).";
+        //            return View();
+        //        }
+        //    }
+        //    else if (semester == 2)
+        //    {
+        //        
+        //        var springStart = new DateTime(year, 2, 1); 
+        //        var springEnd = new DateTime(year, 7, 31);   
+        //
+        //        if (examDate < springStart || examDate > springEnd)
+        //        {
+        //            ViewBag.ErrorMessage = $"Exam date ({examDate:yyyy-MM-dd}) does not match Semester 2 (Feb to July {year}).";
+        //            return View();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ViewBag.ErrorMessage = "Semester must be either 1 or 2.";
+        //        return View();
+        //    }
+        //
+        //
+        //    if (!TimeSpan.TryParse(startTime, out var startTs) || !TimeSpan.TryParse(endTime, out var endTs) || startTs >= endTs)
+        //    {
+        //        ViewBag.ErrorMessage = "Invalid or conflicting time.";
+        //        return View();
+        //    }
+        //
+        //    var classRoom = _context.ClassRooms.FirstOrDefault(cr => cr.RoomNumber == roomNumber && cr.buliding == building);
+        //    if (classRoom == null)
+        //    {
+        //        classRoom = new ClassRoom
+        //        {
+        //            RoomNumber = roomNumber,
+        //            buliding = building,
+        //            Capacity = capacity
+        //        };
+        //        _context.ClassRooms.Add(classRoom);
+        //        _context.SaveChanges();
+        //    }
+        //
+        //    var overlapping = _context.Sections
+        //        .Include(s => s.TimeSlot)
+        //        .Include(s => s.ClassRoom)
+        //        .Where(s =>
+        //            s.ClassRoom.RoomNumber == roomNumber &&
+        //            s.ClassRoom.buliding == building &&
+        //            s.Semester == semester &&
+        //            s.year == year &&
+        //            s.TimeSlot.Day == day)
+        //        .ToList();
+        //
+        //    foreach (var s in overlapping)
+        //    {
+        //        if (s.TimeSlot == null) continue;
+        //
+        //        var existingStart = s.TimeSlot.StartTime.TimeOfDay;
+        //        var existingEnd = s.TimeSlot.EndTime.TimeOfDay;
+        //
+        //        bool overlap = startTs < existingEnd && endTs > existingStart;
+        //        if (overlap)
+        //        {
+        //            ViewBag.ErrorMessage = $"Conflict on {day}: Room {roomNumber} in {building} is already booked from {existingStart:hh\\:mm} to {existingEnd:hh\\:mm}.";
+        //            return View();
+        //        }
+        //    }
+        //
+        //
+        //    var ts = _context.TimeSlots.FirstOrDefault(t =>
+        //        t.Day == day &&
+        //        t.StartTime.TimeOfDay == startTs &&
+        //        t.EndTime.TimeOfDay == endTs);
+        //
+        //    if (ts == null)
+        //    {
+        //        ts = new TimeSlot
+        //        {
+        //            Day = day,
+        //            StartTime = DateTime.Today.Add(startTs),
+        //            EndTime = DateTime.Today.Add(endTs)
+        //        };
+        //        _context.TimeSlots.Add(ts);
+        //        _context.SaveChanges();
+        //    }
+        //
+        //    var section = new Sections
+        //    {
+        //        Course = course,
+        //        ClassRoom = classRoom,
+        //        TimeSlot = ts,
+        //        Semester = semester,
+        //        year = year
+        //    };
+        //
+        //    _context.Sections.Add(section);
+        //    _context.SaveChanges();
+        //
+        //    TempData["SuccessMessage"] = "Section created successfully.";
+        //    return RedirectToAction("SectionTable");
+        //}
 
 
         public IActionResult SectionTable()

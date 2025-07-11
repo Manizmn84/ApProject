@@ -62,6 +62,10 @@ namespace DebugModels.Data
                 .HasForeignKey(s => s.DepartmentId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Department>()
+                .Property(d => d.Budget)
+                .HasColumnType("decimal(10,2)");
+
             modelBuilder.Entity<Course>()
                 .HasOne(c => c.Department)
                 .WithMany(d => d.Courses)
