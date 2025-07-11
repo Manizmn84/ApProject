@@ -18,7 +18,7 @@ namespace DebugModels.Models
         [ForeignKey("UserId")]
         public User? User { get; set; }
 
-        public List<Teaches> Teaches { get; set; }
+        public List<Teaches>? Teaches { get; set; }
         #endregion
     }
 }

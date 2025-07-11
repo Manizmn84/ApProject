@@ -19,9 +19,9 @@ namespace DebugModels.Models
         [ForeignKey("DepartmentId")]
         public Department? Department { get; set; }
 
-        public List<Sections> Sections { get; set; }
+        public List<Sections>? Sections { get; set; }
 
-        public List<PreRegs> PreRegs { get; set; }
+        public List<PreRegs>? PreRegs { get; set; }
         #endregion
     }
 }

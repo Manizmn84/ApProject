@@ -17,11 +17,11 @@ namespace DebugModels.Models
         public decimal Budget { get; set; }
 
         #region
-        public List<Instructor> Instructors { get; set; }
+        public List<Instructor>? Instructors { get; set; }
 
-        public List<Student> Students { get; set; }
+        public List<Student>? Students { get; set; }
 
-        public List<Course> Courses { get; set; }
+        public List<Course>? Courses { get; set; }
         #endregion
     }
 }

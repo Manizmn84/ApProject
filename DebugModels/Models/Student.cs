@@ -15,7 +15,7 @@ namespace DebugModels.Models
         public int? DepartmentId { get; set; }
         public Department? Department { get; set; }
 
-        public List<Takes> Takes { get; set; }
+        public List<Takes>? Takes { get; set; }
         #endregion
     }
 }

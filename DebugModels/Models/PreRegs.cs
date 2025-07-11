@@ -14,7 +14,7 @@ namespace DebugModels.Models
 
         public int? CoureId { get; set; }
         [ForeignKey("CoureId")]
-        public Course Course { get; set; }
+        public Course? Course { get; set; }
         #endregion
 
     }
