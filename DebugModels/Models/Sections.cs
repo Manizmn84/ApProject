@@ -23,9 +23,7 @@ namespace DebugModels.Models
         [ForeignKey("TeachesId")]
         public Teaches? Teaches { get; set; }
 
-        public int? TakesId { get; set; }
-        [ForeignKey("TakesId")]
-        public Takes? Takes { get; set; }
+        public List<Takes> Takes { get; set; }
 
         public int? ClassRoomId { get; set; }
         [ForeignKey("ClassRoomId")]
