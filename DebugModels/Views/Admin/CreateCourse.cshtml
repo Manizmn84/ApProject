@@ -1,18 +1,12 @@
 ﻿@model DebugModels.Models.Course
 
 <h2>Add New Course</h2>
-@*
-<form asp-action="CreateCourse" method="post">
-    <div>
+
+<form asp-action="CreateCourse" method="post" id="createCourseForm">
+    <div class="mb-3">
         <label asp-for="Title"></label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
-    </div>
-
-    <div>
-        <label asp-for="Code"></label>
-        <input asp-for="Code" class="form-control" />
-        <span asp-validation-for="Code" class="text-danger"></span>
     </div>
 
     <div>
@@ -21,19 +15,59 @@
         <span asp-validation-for="Unit" class="text-danger"></span>
     </div>
 
-    <div>
-        <label asp-for="Description"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
+
+    <!-- انتخاب دانشکده -->
+    <!-- انتخاب دانشکده -->
+    <div class="mb-3">
+        <label for="DepartmentId">Select Department</label>
+        <select id="DepartmentId" name="DepartmentId" class="form-select" required>
+            <option value="">-- Select Department --</option>
+            @foreach (var dept in ViewBag.Departments as List<DebugModels.Models.Department>)
+            {
+                <option value="@dept.Id">@dept.Name</option>
+            }
+        </select>
+        <span asp-validation-for="DepartmentId" class="text-danger"></span> <!-- 👈 این خط مهمه -->
     </div>
 
-    <div>
-        <label asp-for="final_exam_date"></label>
-        <input asp-for="final_exam_date" type="date" class="form-control" />
-        <span asp-validation-for="final_exam_date" class="text-danger"></span>
+
+    <!-- دروس پیش نیاز (چند انتخابی) -->
+    <div class="mb-3">
+        <label for="PreReqCourseIds">Select Prerequisite Courses</label>
+        <select id="PreReqCourseIds" name="PreReqCourseIds" class="form-select" multiple size="5">
+            <!-- اینجا با جاوااسکریپت پر میشه -->
+        </select>
     </div>
 
     <br />
     <button type="submit" class="btn btn-success">Add Course</button>
 </form>
-*@
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(function () {
+            $('#DepartmentId').change(function () {
+                var departmentId = $(this).val();
+
+                if (departmentId) {
+                    $.getJSON('@Url.Action("GetCoursesByDepartment", "Admin")', { departmentId: departmentId }, function (data) {
+                        var $preReqSelect = $('#PreReqCourseIds');
+                        $preReqSelect.empty();
+
+                        $.each(data, function (i, course) {
+                            $preReqSelect.append($('<option>').val(course.courseId).text(course.title));
+                        });
+                    }).fail(function (xhr, status, error) {
+                        console.error("Error fetching courses: ", status, error);
+                    });
+                } else {
+                    $('#PreReqCourseIds').empty();
+                }
+            });
+        });
+    </script>
+
+    <partial name="_ValidationScriptsPartial" />
+}

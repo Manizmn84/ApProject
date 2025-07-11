@@ -1,50 +1,54 @@
-﻿@model List<DebugModels.Models.Course>
+﻿<h2 class="mt-4 mb-3">📚 Course List with Prerequisites</h2>
 
-<h2>Course List</h2>
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-}
-
-<table class="table table-bordered">
-    <thead>
+<table class="table table-hover table-striped shadow-sm border">
+    <thead class="table-dark">
         <tr>
             <th>Title</th>
-            <th>Code</th>
             <th>Unit</th>
-            <th>Description</th>
-            <th>Exam Date</th>
+            <th>Department</th>
+            <th>Prerequisite(s)</th>
             <th>Actions</th>
         </tr>
     </thead>
-    @*
+
     <tbody>
         @foreach (var course in Model)
         {
             <tr>
                 <td>@course.Title</td>
-                <td>@course.Code</td>
                 <td>@course.Unit</td>
-                <td>@course.Description</td>
-                <td>@course.final_exam_date.ToShortDateString()</td>
                 <td>
-                    <a asp-action="EditCourse" asp-route-id="@course.CourseId" class="btn btn-warning btn-sm">Edit</a>
-
+                    @course.Department?.Name 
+                </td>
+                <td>
+                    @if (course.PreRegs != null && course.PreRegs.Count > 0)
+                    {
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var pre in course.PreRegs)
+                            {
+                                <span class="badge bg-info text-dark">@pre.PreRegCourse?.Title</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">No prerequisites</span>
+                    }
+                </td>
+                <td>
                     <form asp-action="DeleteCourse" method="post" style="display:inline;">
                         <input type="hidden" name="id" value="@course.CourseId" />
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this course?');">Delete</button>
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure you want to delete this course?');">
+                            Delete
+                        </button>
                     </form>
                 </td>
             </tr>
         }
     </tbody>
-    *@
 </table>
+
 <div class="mt-3">
     <a class="btn btn-success" href="@Url.Action("CreateCourse", "Admin")">➕ Create New Course</a>
 </div>
