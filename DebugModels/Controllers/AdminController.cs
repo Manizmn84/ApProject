@@ -267,13 +267,18 @@ namespace DebugModels.Controllers
                 return View("Index");
             }
 
+            var departments = _context.Departments
+                            .Where(dp => !dp.Students.Any(ins => ins.UserId == userId))
+                            .ToList();
+
+            ViewBag.Departments = departments;
             ViewBag.User = user;
             ViewBag.UserId = userId;
             return View();
         }
 
         [HttpPost]
-        public IActionResult CreateStudent(int userId, DateTime enrollment_date)
+        public IActionResult CreateStudent(int userId, DateTime enrollment_date, int departmentId)
         {
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
@@ -282,17 +287,27 @@ namespace DebugModels.Controllers
                 return View("Index");
             }
 
-            var existingInstructor = _context.Instructors.FirstOrDefault(i => i.UserId == userId);
-            if (existingInstructor != null)
+            var department = _context.Departments.Include(dp => dp.Students).FirstOrDefault(dp => dp.Id == departmentId);
+            if (department == null)
             {
-                ViewBag.ErrorMessage = "We already have Instructor with this ID";
+                ViewBag.ErrorMessage = "We dont have any department with that id ";
                 return View("Index");
             }
 
-            var Student = new Student
+            var ExistStudentDepartment = department.Students.Any(stu => stu.UserId == userId);
+
+            if (ExistStudentDepartment)
+            {
+                TempData["ErrorMessage"] = $"The Department with Id : {departmentId} have the Student with User Id : {userId}";
+                var usersData = _context.Users.Include(users => users.UserRoles).ThenInclude(userRole => userRole.Role).ToList();
+                return View("UserTable", usersData);
+            }
+
+                var Student = new Student
             {
                 UserId = userId,
                 enrollment_date = enrollment_date,
+                DepartmentId = departmentId,
             };
 
             var studentRole = _context.Roles.FirstOrDefault(u => u.name == "Student");
@@ -306,25 +321,23 @@ namespace DebugModels.Controllers
 
             var existingUserRole = _context.UserRoles.FirstOrDefault(u => u.UserId == userId && u.RoleId == studentRole.Id);
 
-            if (existingUserRole != null)
+            if (existingUserRole == null)
             {
-                ViewBag.ErrorMessage = "User already has Student";
-                return View("Index");
+                var userRole = new UserRole
+                {
+                    UserId = userId,
+                    RoleId = studentRole.Id,
+                };
+
+                _context.UserRoles.Add(userRole);
+                _context.SaveChanges();
             }
 
-            var userRole = new UserRole
-            {
-                UserId = userId,
-                RoleId = studentRole.Id,
-            };
-
-            _context.UserRoles.Add(userRole);
-            _context.SaveChanges();
 
             _context.Students.Add(Student);
             _context.SaveChanges();
-
-            return RedirectToAction("UserTable");
+            var users = _context.Users.Include(users => users.UserRoles).ThenInclude(userRole => userRole.Role).ToList();
+            return RedirectToAction("UserTable", users);
         }
 
         public IActionResult CreateCourse()

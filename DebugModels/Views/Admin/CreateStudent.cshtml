@@ -1,5 +1,6 @@
 ﻿@{
     var user = ViewBag.User as User;
+    var departments = ViewBag.Departments as List<Department>;
 }
 
 <div class="container mt-5">
@@ -18,6 +19,7 @@
             <form method="post" action="@Url.Action("CreateStudent")">
                 <input type="hidden" name="userId" value="@ViewBag.UserId" />
 
+                <!-- Enrollment Date -->
                 <div class="mb-3">
                     <label for="enrollment_date" class="form-label">Enrollment Date</label>
                     <input type="date"
@@ -28,6 +30,19 @@
                            required>
                 </div>
 
+                <!-- Department Selection -->
+                <div class="mb-3">
+                    <label for="departmentId" class="form-label">Select Department</label>
+                    <select class="form-select" name="departmentId" id="departmentId" required>
+                        <option value="">-- Select Department --</option>
+                        @foreach (var dept in departments)
+                        {
+                            <option value="@dept.Id">@dept.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Submit buttons -->
                 <div class="mt-4 d-flex justify-content-end">
                     <a href="@Url.Action("UserTable")" class="btn btn-outline-secondary me-2">Cancel</a>
                     <button type="submit" class="btn btn-success">Create Student</button>
@@ -36,4 +51,3 @@
         </div>
     </div>
 </div>
-
