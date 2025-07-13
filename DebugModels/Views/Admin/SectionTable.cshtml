@@ -3,7 +3,7 @@
 @{
     ViewBag.Title = "Sections Table";
 
-    var mergedSections = Model
+    var groupedSections = Model
         .Where(s => s.Course != null && s.ClassRoom != null && s.TimeSlot != null)
         .GroupBy(s => new
         {
@@ -13,12 +13,14 @@
             s.TimeSlot.EndTime,
             s.Semester,
             s.year,
-            InstructorId = s.Teaches?.Instructor?.User?.Id
+            s.final_exam_date,
+            s.Course.Department?.Name,
+            InstructorId = s.Teaches?.Instructor?.InstructorId
         })
         .Select(g => new
         {
             Representative = g.First(),
-            Days = g.Select(x => x.TimeSlot.Day).Distinct().ToList()
+            Days = g.Select(s => s.TimeSlot.Day).Distinct().ToList()
         })
         .ToList();
 }
@@ -39,6 +41,7 @@
         <tr>
             <th>Course</th>
             <th>Code</th>
+            <th>Department</th>
             <th>Room</th>
             <th>Building</th>
             <th>Capacity</th>
@@ -46,13 +49,13 @@
             <th>Time</th>
             <th>Semester</th>
             <th>Year</th>
+            <th>Final Exam</th>
             <th>Instructor</th>
             <th>Actions</th>
         </tr>
     </thead>
-    @*
     <tbody>
-        @foreach (var item in mergedSections)
+        @foreach (var item in groupedSections)
         {
             var sec = item.Representative;
             var instructorUser = sec.Teaches?.Instructor?.User;
@@ -60,7 +63,8 @@
 
             <tr>
                 <td>@sec.Course.Title</td>
-                <td>@sec.Course.Code</td>
+                <td>@sec.Code</td>
+                <td>@sec.Course.Department?.Name</td>
                 <td>@sec.ClassRoom.RoomNumber</td>
                 <td>@sec.ClassRoom.buliding</td>
                 <td>@sec.ClassRoom.Capacity</td>
@@ -68,6 +72,7 @@
                 <td>@sec.TimeSlot.StartTime.ToString("HH:mm") - @sec.TimeSlot.EndTime.ToString("HH:mm")</td>
                 <td>@sec.Semester</td>
                 <td>@sec.year</td>
+                <td>@sec.final_exam_date.ToString("yyyy/MM/dd")</td>
                 <td>
                     @if (hasInstructor)
                     {
@@ -111,14 +116,9 @@
             </tr>
         }
     </tbody>
-    *@
 </table>
 
 <div class="mt-3">
     <a class="btn btn-success" href="@Url.Action("CreateSection", "Admin")">➕ Create New Section</a>
 </div>
-
-
-
-
 
