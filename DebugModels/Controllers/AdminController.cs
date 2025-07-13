@@ -559,8 +559,20 @@ namespace DebugModels.Controllers
             }
 
             var course = _context.Courses
-                .Include(c => c.Department)
+                .Include(c => c.PreRegs)
+                .ThenInclude(p => p.PreRegCourse)
                 .FirstOrDefault(c => c.CourseId == courseId);
+
+            foreach (var prereq in course.PreRegs)
+            {
+                var exists = _context.Sections.Any(s => s.CourseId == prereq.PreRegCourseId);
+                if (!exists)
+                {
+                    ViewBag.ErrorMessage = $"Prerequisite course '{prereq.PreRegCourse?.Title}' is not yet scheduled.";
+                    return View();
+                }
+            }
+
 
             if (course == null || course.Department == null)
             {
@@ -568,6 +580,7 @@ namespace DebugModels.Controllers
                 return View();
             }
 
+            
             var department = course.Department;
 
             if (!TimeSpan.TryParse(startTime, out var startTs) || !TimeSpan.TryParse(endTime, out var endTs) || startTs >= endTs)
@@ -702,57 +715,64 @@ namespace DebugModels.Controllers
         {
             var sections = _context.Sections
                 .Include(s => s.Course)
+                .ThenInclude(c => c.Department)
                 .Include(s => s.ClassRoom)
                 .Include(s => s.TimeSlot)
-                .Include(s => s.Course).ThenInclude(d => d.Department)
-                .Include(s => s.Teaches).ThenInclude(t => t.Instructor).ThenInclude(i => i.User)
+                .Include(s => s.Teaches)
+                    .ThenInclude(t => t.Instructor)
+                        .ThenInclude(i => i.User)
+                .Include(s => s.Takes)
+                    .ThenInclude(t => t.Student)
+                        .ThenInclude(st => st.User)
                 .ToList();
 
             return View(sections);
         }
 
-        //[HttpPost]
-        //public IActionResult DeleteSection(int sectionId)
-        //{
-        //    var section = _context.Sections
-        //        .Include(s => s.TimeSlot)
-        //        .Include(s => s.Teaches)
-        //        .Include(s => s.Takes)
-        //        .FirstOrDefault(s => s.SectionsId == sectionId);
 
-        //    if (section == null)
-        //    {
-        //        TempData["ErrorMessage"] = "Section not found.";
-        //        return RedirectToAction("SectionTable");
-        //    }
+        [HttpPost]
+        public IActionResult DeleteSection(int sectionId)
+        {
+            var section = _context.Sections
+                .Include(s => s.Teaches)
+                .Include(s => s.Takes)
+                .Include(s => s.TimeSlot)
+                .FirstOrDefault(s => s.SectionsId == sectionId);
 
-        //    if (section.Takes != null && section.Takes.Any())
-        //    {
-        //        _context.Takes.RemoveRange(section.Takes);
-        //    }
+            if (section == null)
+            {
+                TempData["ErrorMessage"] = "Section not found.";
+                return RedirectToAction("SectionTable");
+            }
 
-            
-        //    if (section.Teaches != null)
-        //    {
-        //        _context.Teaches.Remove(section.Teaches);
-        //    }
+        
+            if (section.Teaches != null)
+            {
+                _context.Teaches.Remove(section.Teaches);
+            }
 
             
-        //    bool isTimeSlotShared = _context.Sections
-        //        .Any(s => s.TimeSlotId == section.TimeSlotId && s.SectionsId != section.SectionsId);
+            if (section.Takes != null && section.Takes.Any())
+            {
+                _context.Takes.RemoveRange(section.Takes);
+            }
 
-        //    _context.Sections.Remove(section);
+            
+            bool isTimeSlotUsedElsewhere = _context.Sections
+                .Any(s => s.TimeSlotId == section.TimeSlotId && s.SectionsId != section.SectionsId);
 
-        //    if (!isTimeSlotShared && section.TimeSlot != null)
-        //    {
-        //        _context.TimeSlots.Remove(section.TimeSlot);
-        //    }
+            if (!isTimeSlotUsedElsewhere && section.TimeSlot != null)
+            {
+                _context.TimeSlots.Remove(section.TimeSlot);
+            }
 
-        //    _context.SaveChanges();
+            
+            _context.Sections.Remove(section);
 
-        //    TempData["SuccessMessage"] = "Section deleted successfully.";
-        //    return RedirectToAction("SectionTable");
-        //}
+            _context.SaveChanges();
+            TempData["SuccessMessage"] = "Section deleted successfully with all related assignments.";
+            return RedirectToAction("SectionTable");
+        }
 
         public IActionResult AssignInstructor(int sectionId)
         {
@@ -888,7 +908,145 @@ namespace DebugModels.Controllers
         }
 
 
+        public IActionResult AssignStudent(int sectionId)
+        {
+            var section = _context.Sections
+                .Include(s => s.Course).ThenInclude(c => c.Department)
+                .Include(s => s.ClassRoom)
+                .Include(s => s.TimeSlot)
+                .Include(s => s.Takes)
+                .FirstOrDefault(s => s.SectionsId == sectionId);
 
+            if (section == null)
+            {
+                TempData["ErrorMessage"] = "Section not found.";
+                return RedirectToAction("SectionTable");
+            }
+
+            var deptId = section.Course?.DepartmentId;
+
+            var students = _context.Students
+                .Include(s => s.User)
+                .Where(s => s.DepartmentId == deptId)
+                .ToList();
+
+            ViewBag.Section = section;
+            ViewBag.Students = students;
+
+            return View();
+        }
+
+
+        [HttpPost]
+        public IActionResult AssignStudent(int sectionId, int studentId)
+        {
+            var section = _context.Sections
+                .Include(s => s.Takes)
+                .Include(s => s.Course).ThenInclude(c => c.Department)
+                .Include(s => s.ClassRoom)
+                .Include(s => s.TimeSlot)
+                .FirstOrDefault(s => s.SectionsId == sectionId);
+
+            if (section == null)
+            {
+                TempData["ErrorMessage"] = "Section not found.";
+                return RedirectToAction("SectionTable");
+            }
+
+            var student = _context.Students
+                .Include(s => s.Takes).ThenInclude(t => t.Sections).ThenInclude(sec => sec.TimeSlot)
+                .Include(s => s.Department)
+                .FirstOrDefault(s => s.StudentId == studentId);
+
+            if (student == null)
+            {
+                TempData["ErrorMessage"] = "Student not found.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            
+            bool alreadyAssigned = _context.Takes.Any(t => t.StudentId == studentId && t.SectionId == sectionId);
+            if (alreadyAssigned)
+            {
+                TempData["ErrorMessage"] = "This student is already assigned to this class.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            
+            int currentCount = _context.Takes.Count(t => t.SectionId == sectionId);
+            int maxCapacity = section.ClassRoom.Capacity;
+
+            if (currentCount >= maxCapacity)
+            {
+                TempData["ErrorMessage"] = "Class is full. Cannot assign more students.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            
+            if (student.DepartmentId != section.Course?.DepartmentId)
+            {
+                TempData["ErrorMessage"] = "This student does not belong to the same department as the course.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            
+            var studentSections = student.Takes
+                .Where(t => t.Sections?.TimeSlot != null)
+                .Select(t => t.Sections)
+                .ToList();
+
+            foreach (var s in studentSections)
+            {
+                if (s.TimeSlot?.Day == section.TimeSlot?.Day)
+                {
+                    var start1 = s.TimeSlot.StartTime.TimeOfDay;
+                    var end1 = s.TimeSlot.EndTime.TimeOfDay;
+                    var start2 = section.TimeSlot.StartTime.TimeOfDay;
+                    var end2 = section.TimeSlot.EndTime.TimeOfDay;
+
+                    if (start1 < end2 && start2 < end1)
+                    {
+                        TempData["ErrorMessage"] = "Time conflict detected with another class.";
+                        return RedirectToAction("AssignStudent", new { sectionId });
+                    }
+                }
+            }
+
+            
+            var take = new Takes
+            {
+                StudentId = studentId,
+                SectionId = sectionId
+            };
+
+            _context.Takes.Add(take);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Student successfully assigned to the section.";
+            return RedirectToAction("SectionTable");
+        }
+
+
+        [HttpPost]
+        public IActionResult UnassignStudent(int takesId)
+        {
+            var takes = _context.Takes
+                .Include(t => t.Sections)
+                .Include(t => t.Student)
+                .FirstOrDefault(t => t.TakesId == takesId);
+
+            if (takes == null)
+            {
+                TempData["ErrorMessage"] = "Student assignment not found.";
+                return RedirectToAction("SectionTable");
+            }
+
+            _context.Takes.Remove(takes);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Student unassigned from section successfully.";
+            return RedirectToAction("SectionTable");
+        }
 
 
 
