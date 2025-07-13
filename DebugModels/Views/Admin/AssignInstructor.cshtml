@@ -1,26 +1,63 @@
-﻿@{
+﻿@model DebugModels.Models.Sections
+
+@{
     ViewBag.Title = "Assign Instructor";
-    var section = ViewBag.Section as DebugModels.Models.Sections;
+
     var instructors = ViewBag.Instructors as List<DebugModels.Models.Instructor>;
 }
 
-<h2>Assign Instructor to Section</h2>
+<h2>Assign Instructor to Class</h2>
 
-<form asp-action="AssignInstructor" method="post">
-    <input type="hidden" name="sectionId" value="@(section.SectionsId)" />
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
 
-    <label>Select Instructor:</label>
-    <select name="instructorId" class="form-control" required>
-        @foreach (var ins in instructors)
-        {
-            <option value="@ins.InstructorId">
-                @ins.User?.first_name @ins.User?.last_name (ID: @ins.InstructorId)
-            </option>
-        }
-    </select>
+@if (Model != null)
+{
+    <div class="card p-4 shadow-sm mt-3" style="max-width: 600px">
+        <h4>Class Info</h4>
+        <ul>
+            <li><strong>Course:</strong> @Model.Course?.Title</li>
+            <li><strong>Department:</strong> @Model.Course?.Department?.Name</li>
+            <li><strong>Room:</strong> @Model.ClassRoom?.RoomNumber (@Model.ClassRoom?.buliding)</li>
+            <li>
+                <strong>Time:</strong> @Model.TimeSlot?.Day |
+                @Model.TimeSlot?.StartTime.ToString("HH:mm") - @Model.TimeSlot?.EndTime.ToString("HH:mm")
+            </li>
+            <li><strong>Semester:</strong> @Model.Semester | <strong>Year:</strong> @Model.year</li>
+        </ul>
 
-    <button type="submit" class="btn btn-success mt-2">Assign</button>
-    <a class="btn btn-secondary mt-2" href="@Url.Action("SectionTable")">Cancel</a>
-</form>
+        <form asp-action="AssignInstructor" method="post">
+            <input type="hidden" name="sectionId" value="@Model.SectionsId" />
 
+            <label><strong>Select Instructor:</strong></label>
+            <select name="instructorId" class="form-control mb-3" required>
+                <option value="">-- Choose Instructor --</option>
+                @if (instructors != null)
+                {
+                    foreach (var ins in instructors)
+                    {
+                        <option value="@ins.InstructorId">
+                            @ins.User?.first_name @ins.User?.last_name (ID: @ins.InstructorId)
+                        </option>
+                    }
+                }
+            </select>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">✅ Assign</button>
+                <a class="btn btn-secondary" href="@Url.Action("SectionTable", "Admin")">⬅ Back</a>
+            </div>
+        </form>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger">Section not found.</div>
+}
 

@@ -18,7 +18,7 @@
                 <td>@course.Title</td>
                 <td>@course.Unit</td>
                 <td>
-                    @course.Department?.Name 
+                    @course.Department?.Name
                 </td>
                 <td>
                     @if (course.PreRegs != null && course.PreRegs.Count > 0)
@@ -35,12 +35,18 @@
                         <span class="text-muted fst-italic">No prerequisites</span>
                     }
                 </td>
-                <td>
+                <td class="d-flex gap-2">
+                    <a class="btn btn-sm btn-primary"
+                       asp-action="EditCourse"
+                       asp-route-id="@course.CourseId">
+                        ✏️ Edit
+                    </a>
+
                     <form asp-action="DeleteCourse" method="post" style="display:inline;">
                         <input type="hidden" name="id" value="@course.CourseId" />
                         <button type="submit" class="btn btn-danger btn-sm"
                                 onclick="return confirm('Are you sure you want to delete this course?');">
-                            Delete
+                            🗑️ Delete
                         </button>
                     </form>
                 </td>

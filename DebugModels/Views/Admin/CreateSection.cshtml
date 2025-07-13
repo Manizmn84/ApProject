@@ -2,70 +2,55 @@
     ViewBag.Title = "Create Section";
 }
 
-<h2>Create New Section</h2>
+<h2>Create Section</h2>
 
-<form asp-action="CreateSection" method="post" style="max-width: 600px;">
-    <div class="form-group">
-        <label>Course:</label>
-        <select name="courseId" class="form-control" required>
-            <option value="">-- Select Course --</option>
-            @foreach (var c in ViewBag.Courses as List<DebugModels.Models.Course>)
-            {
-                <option value="@c.CourseId">@c.Title</option>
-            }
-        </select>
+<form asp-action="CreateSection" method="post" style="max-width: 600px; display: flex; flex-direction: column; gap: 12px;">
+    <label>Course:</label>
+    <select name="courseId" required class="form-control">
+        <option value="">-- Select Course --</option>
+        @foreach (var course in ViewBag.Courses)
+        {
+            <option value="@course.CourseId">@course.Title</option>
+        }
+    </select>
+
+    <label>Building:</label>
+    <input type="text" name="building" class="form-control" required />
+
+    <label>Room Number:</label>
+    <input type="number" name="roomNumber" class="form-control" required min="1" />
+
+    <label>Capacity:</label>
+    <input type="number" name="capacity" class="form-control" required min="1" />
+
+    <label>Select Day:</label>
+    <div>
+        @foreach (var day in ViewBag.AllDays as string[])
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="day" value="@day" id="day_@day" required />
+                <label class="form-check-label" for="day_@day">@day</label>
+            </div>
+        }
     </div>
 
-    <div class="form-group">
-        <label>Building:</label>
-        <input name="building" class="form-control" required />
-    </div>
+    <label>Start Time:</label>
+    <input type="time" name="startTime" class="form-control" required />
 
-    <div class="form-group">
-        <label>Room Number:</label>
-        <input name="roomNumber" type="number" class="form-control" required min="1" />
-    </div>
+    <label>End Time:</label>
+    <input type="time" name="endTime" class="form-control" required />
 
-    <div class="form-group">
-        <label>Capacity:</label>
-        <input name="capacity" type="number" class="form-control" required min="1" />
-    </div>
+    <label>Semester (1 or 2):</label>
+    <input type="number" name="semester" class="form-control" required min="1" max="2" />
 
-    <div class="form-group">
-        <label>Day:</label>
-        <select name="day" class="form-control" required>
-            <option value="">-- Select Day --</option>
-            @foreach (var d in ViewBag.AllDays as string[])
-            {
-                <option value="@d">@d</option>
-            }
-        </select>
-    </div>
+    <label>Year:</label>
+    <input type="number" name="year" class="form-control" required min="2000" max="3000" />
 
-    <div class="form-group">
-        <label>Start Time:</label>
-        <input name="startTime" type="time" class="form-control" required />
-    </div>
+    <label>Final Exam Date:</label>
+    <input type="date" name="finalExamDate" class="form-control" required />
 
-    <div class="form-group">
-        <label>End Time:</label>
-        <input name="endTime" type="time" class="form-control" required />
-    </div>
-
-    <div class="form-group">
-        <label>Semester (1 or 2):</label>
-        <input name="semester" type="number" class="form-control" required min="1" max="2" />
-    </div>
-
-    <div class="form-group">
-        <label>Year:</label>
-        <input name="year" type="number" class="form-control" required min="2000" max="3000" />
-    </div>
-
-    <div class="form-group">
-        <label>Final Exam Date:</label>
-        <input name="finalExamDate" type="date" class="form-control" required />
-    </div>
+    <label>Description:</label>
+    <textarea name="description" class="form-control" required rows="3" placeholder="e.g. Weekly lecture on data structures"></textarea>
 
     <button type="submit" class="btn btn-primary">Create Section</button>
 </form>
@@ -74,6 +59,7 @@
 {
     <div class="alert alert-danger mt-3">@ViewBag.ErrorMessage</div>
 }
+
 
 
 
