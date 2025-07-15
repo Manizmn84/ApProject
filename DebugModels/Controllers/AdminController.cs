@@ -595,36 +595,62 @@ namespace DebugModels.Controllers
                 return View();
             }
 
-            
+
+
             var examMonth = finalExamDate.Month;
             var examDay = finalExamDate.Day;
+            var examYear = finalExamDate.Year;
 
             if (semester == 1)
             {
-                bool inTerm1 = (examMonth == 9 && examDay >= 23) ||
+                bool inTerm1 = (examMonth == 9 && examDay >= 23) || 
                                (examMonth == 10) || (examMonth == 11) ||
                                (examMonth == 12) ||
-                               (examMonth == 1 && examDay <= 20);
+                               (examMonth == 1 && examDay <= 20);   
 
-                if (!inTerm1)
+                if (!inTerm1 || examYear != year)
                 {
-                    ViewBag.ErrorMessage = "Final exam date is not valid for Semester 1 (Mehr to Dey).";
+                    ViewBag.ErrorMessage = "For Semester 1, the final exam must be from Mehr to Dey (Sep 23 – Jan 20), and year must match the exam year.";
                     return View();
                 }
             }
-            else 
+            else if (semester == 2)
             {
-                bool inTerm2 = (examMonth == 1 && examDay >= 21) ||
-                               (examMonth == 2) || (examMonth == 3) ||
-                               (examMonth == 4) || (examMonth == 5) ||
-                               (examMonth == 6) || (examMonth == 7 && examDay <= 22);
+                bool isFarvardinToTir = (examMonth >= 4 && examMonth <= 7) ||
+                                         (examMonth == 1 && examDay >= 21) ||
+                                         (examMonth == 2) || (examMonth == 3);
 
-                if (!inTerm2)
+                bool isBahmanToEsfand = (examMonth == 1 && examDay <= 20) || (examMonth == 12);
+
+                if (isFarvardinToTir)
                 {
-                    ViewBag.ErrorMessage = "Final exam date is not valid for Semester 2 (Bahman to Tir).";
+                    if (examYear != year + 1)
+                    {
+                        ViewBag.ErrorMessage = "For Semester 2 exams in Farvardin to Tir (Jan 21 – Jul), exam year must be one more than selected year.";
+                        return View();
+                    }
+                }
+                else if (isBahmanToEsfand)
+                {
+                    if (examYear != year)
+                    {
+                        ViewBag.ErrorMessage = "For Semester 2 exams in Bahman to Esfand (Dec – Jan 20), exam year must match the selected year.";
+                        return View();
+                    }
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = "Final exam date is not valid for Semester 2.";
                     return View();
                 }
             }
+            else
+            {
+                ViewBag.ErrorMessage = "Semester must be either 1 or 2.";
+                return View();
+            }
+
+
 
             var classRoom = _context.ClassRooms
                 .FirstOrDefault(cr => cr.RoomNumber == roomNumber && cr.buliding == building);
@@ -690,7 +716,7 @@ namespace DebugModels.Controllers
             if (titlePrefix.Length > 3)
                 titlePrefix = titlePrefix.Substring(0, 3);
 
-            int sectionCount = _context.Sections.Count() + 1;
+            
             var section = new Sections
             {
                 CourseId = courseId,
@@ -700,7 +726,7 @@ namespace DebugModels.Controllers
                 year = year,
                 final_exam_date = finalExamDate,
                 Description = description,
-                Code = sectionCount.ToString()
+                Code = $"{titlePrefix}-{new Random().Next(1000, 9999)}"
             };
 
             _context.Sections.Add(section);
@@ -827,6 +853,7 @@ namespace DebugModels.Controllers
                 .Include(i => i.User)
                 .FirstOrDefault(i => i.InstructorId == instructorId);
 
+
             if (instructor == null || instructor.UserId == null)
             {
                 TempData["ErrorMessage"] = "Instructor or their user not found.";
@@ -834,6 +861,31 @@ namespace DebugModels.Controllers
             }
 
             var userId = instructor.UserId.Value;
+
+            
+            DateTime semesterStart;
+
+            if (section.Semester == 1)
+            {
+                semesterStart = new DateTime(section.year, 9, 23);
+            }
+            else if (section.Semester == 2)
+            {
+                semesterStart = new DateTime(section.year, 1, 21); 
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Invalid semester.";
+                return RedirectToAction("SectionTable");
+            }
+
+            
+            if (instructor.hire_date > semesterStart)
+            {
+                TempData["ErrorMessage"] = "Instructor was hired after the semester started and cannot be assigned to this section.";
+                return RedirectToAction("SectionTable");
+            }
+
 
             bool timeConflict = _context.Sections
                 .Include(s => s.TimeSlot)
@@ -990,15 +1042,6 @@ namespace DebugModels.Controllers
 
             int userId = student.UserId.Value;
 
-            
-            bool alreadyAssigned = _context.Takes.Any(t => t.StudentId == studentId && t.SectionId == sectionId);
-            if (alreadyAssigned)
-            {
-                TempData["ErrorMessage"] = "This student is already assigned to this class.";
-                return RedirectToAction("AssignStudent", new { sectionId });
-            }
-
-            
             int currentCount = _context.Takes.Count(t => t.SectionId == sectionId);
             int maxCapacity = section.ClassRoom.Capacity;
 
@@ -1007,6 +1050,39 @@ namespace DebugModels.Controllers
                 TempData["ErrorMessage"] = "Class is full. Cannot assign more students.";
                 return RedirectToAction("AssignStudent", new { sectionId });
             }
+
+            DateTime semesterStart;
+
+            if (section.Semester == 1)
+            {
+                semesterStart = new DateTime(section.year, 9, 23); 
+            }
+            else if (section.Semester == 2)
+            {
+                semesterStart = new DateTime(section.year, 1, 21); 
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Invalid semester.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            
+            if (student.enrollment_date > semesterStart)
+            {
+                TempData["ErrorMessage"] = "This student enrolled after the semester started and cannot join this class.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            bool alreadyAssigned = _context.Takes.Any(t => t.StudentId == studentId && t.SectionId == sectionId);
+            if (alreadyAssigned)
+            {
+                TempData["ErrorMessage"] = "This student is already assigned to this class.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+            
+            
 
             
             if (student.DepartmentId != section.Course?.DepartmentId)
@@ -1070,6 +1146,24 @@ namespace DebugModels.Controllers
                 TempData["ErrorMessage"] = "This student is also an instructor at the same time in another class or this class.";
                 return RedirectToAction("SectionTable", new { sectionId });
             }
+
+
+            string courseTitle = section.Course?.Title?.Trim().ToLower();
+
+            bool duplicatePassed = student.Takes
+                .Where(t => t.Sections?.Course != null &&
+                            t.Sections.Course.Title.Trim().ToLower() == courseTitle &&
+                            t.grade >= 10 &&
+                            t.SectionId != sectionId) 
+                .Any();
+
+            if (duplicatePassed)
+            {
+                TempData["ErrorMessage"] = "This student has already passed a course with the same title and cannot retake it.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
+
+
 
 
             var take = new Takes
