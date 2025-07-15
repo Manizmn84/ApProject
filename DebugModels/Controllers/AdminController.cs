@@ -574,14 +574,14 @@ namespace DebugModels.Controllers
             }
 
 
-            if (course == null || course.Department == null)
+            if (course == null || course.DepartmentId == null)
             {
                 ViewBag.ErrorMessage = "Invalid course or department.";
                 return View();
             }
 
             
-            var department = course.Department;
+            var department = _context.Departments.FirstOrDefault(dp => dp.Id == course.DepartmentId);
 
             if (!TimeSpan.TryParse(startTime, out var startTs) || !TimeSpan.TryParse(endTime, out var endTs) || startTs >= endTs)
             {
