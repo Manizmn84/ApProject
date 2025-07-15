@@ -2,15 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using DebugModels.Models;
 using Microsoft.EntityFrameworkCore;
+using DebugModels.Services.Course;
 
 namespace DebugModels.Controllers
 {
     public class AdminController : Controller
     {
         private readonly ProjectContext _context;
-        public AdminController(ProjectContext context)
+        private readonly ICourseService _courseService;
+        public AdminController(ProjectContext context , ICourseService courseService)
         {
             _context = context;
+            _courseService = courseService;
         }
         public IActionResult Index()
         {
@@ -798,6 +801,21 @@ namespace DebugModels.Controllers
             _context.SaveChanges();
             TempData["SuccessMessage"] = "Section deleted successfully with all related assignments.";
             return RedirectToAction("SectionTable");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteCourse(int courseId)
+        {
+            var Result = await _courseService.DeleteCourse(courseId);
+
+            if (!Result.Success)
+            {
+                TempData["ErrorMessage"] = Result.Message;
+                return RedirectToAction("CourseTable");
+            }
+
+            TempData["SuccessMessage"] = Result.Message;
+            return RedirectToAction("CourseTable");
         }
 
         public IActionResult AssignInstructor(int sectionId)
