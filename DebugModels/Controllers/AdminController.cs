@@ -855,6 +855,23 @@ namespace DebugModels.Controllers
                 return RedirectToAction("SectionTable");
             }
 
+            bool isStudentConflict = _context.Takes
+                .Include(t => t.Sections)
+                    .ThenInclude(sec => sec.TimeSlot)
+                .Include(t => t.Student)
+                .Where(t => t.Student.UserId == userId && t.Sections.TimeSlot != null)
+                .Any(t =>
+                    t.Sections.TimeSlot.Day == section.TimeSlot.Day &&
+                    section.TimeSlot.StartTime.TimeOfDay < t.Sections.TimeSlot.EndTime.TimeOfDay &&
+                    section.TimeSlot.EndTime.TimeOfDay > t.Sections.TimeSlot.StartTime.TimeOfDay
+                );
+
+            if (isStudentConflict)
+            {
+                TempData["ErrorMessage"] = "Instructor is already a student in another class or this class at this time.";
+                return RedirectToAction("SectionTable");
+            }
+    
             
             var teaches = new Teaches
             {
@@ -1034,7 +1051,27 @@ namespace DebugModels.Controllers
                 }
             }
 
-            
+            bool instructorConflict = _context.Sections
+                .Include(s => s.TimeSlot)
+                .Include(s => s.Teaches).ThenInclude(t => t.Instructor)
+                .Where(s =>
+                    s.Teaches != null &&
+                    s.Teaches.Instructor != null &&
+                    s.Teaches.Instructor.UserId == userId &&
+                    s.TimeSlot != null)
+                .Any(s =>
+                    s.TimeSlot.Day == section.TimeSlot.Day &&
+                    section.TimeSlot.StartTime.TimeOfDay < s.TimeSlot.EndTime.TimeOfDay &&
+                    section.TimeSlot.EndTime.TimeOfDay > s.TimeSlot.StartTime.TimeOfDay
+                );
+
+            if (instructorConflict)
+            {
+                TempData["ErrorMessage"] = "This student is also an instructor at the same time in another class or this class.";
+                return RedirectToAction("SectionTable", new { sectionId });
+            }
+
+
             var take = new Takes
             {
                 StudentId = studentId,
