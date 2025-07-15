@@ -28,8 +28,6 @@
                 <td>@dept.Building</td>
                 <td>@dept.Budget.ToString("C")</td>
                 <td>
-                    <a asp-action="EditDepartment" asp-route-id="@dept.Id" class="btn btn-warning btn-sm">Edit</a>
-
                     <form asp-action="DeleteDepartment" method="post" style="display:inline;">
                         <input type="hidden" name="id" value="@dept.Id" />
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this department?');">Delete</button>

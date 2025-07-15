@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using DebugModels.Models;
 using Microsoft.EntityFrameworkCore;
 using DebugModels.Services.Course;
+using DebugModels.Services.Department;
+using DebugModels.Services.Instructor;
+using DebugModels.Services.Student;
 
 namespace DebugModels.Controllers
 {
@@ -10,10 +13,16 @@ namespace DebugModels.Controllers
     {
         private readonly ProjectContext _context;
         private readonly ICourseService _courseService;
-        public AdminController(ProjectContext context , ICourseService courseService)
+        private readonly IDepartmentService _departmentService;
+        private readonly IInstructorService _InstructorService;
+        private readonly IStudentService _StudentService;
+        public AdminController(ProjectContext context , ICourseService courseService, IDepartmentService departmentService,IInstructorService InstructorService,IStudentService studentService)
         {
             _context = context;
             _courseService = courseService;
+            _departmentService = departmentService;
+            _InstructorService = InstructorService;
+            _StudentService = studentService;
         }
         public IActionResult Index()
         {
@@ -135,20 +144,6 @@ namespace DebugModels.Controllers
             TempData["SuccessMessage"] = "Department updated successfully.";
             return RedirectToAction("DepartmentTable");
         }
-
-        //[HttpPost]
-        //public IActionResult DeleteDepartment(int id)
-        //{
-        //    var department = _context.Departments.Find(id);
-        //    if (department == null)
-        //    {
-        //        TempData["ErrorMessage"] = "Department not found.";
-        //        return RedirectToAction("DepartmentTable");
-        //    }
-        //
-        //    return View(department);
-        //}
-
 
         public IActionResult DepartmentTable()
         {
@@ -362,54 +357,20 @@ namespace DebugModels.Controllers
             return Json(courses);
         }
 
-        //[HttpPost]
-        //public IActionResult DeleteInstructor(int instructorId)
-        //{
-        //    var instructor = _context.Instructors
-        //        .Include(i => i.Teaches)
-        //        .ThenInclude(t => t.Sections)
-        //        .FirstOrDefault(i => i.InstructorId == instructorId);
+        [HttpPost]
+        public async Task<IActionResult> DeleteInstructor(int instructorId)
+        {
+            var Result = await _InstructorService.DeleteInstructor(instructorId);
 
-        //    if (instructor == null)
-        //    {
-        //        TempData["ErrorMessage"] = "Instructor not found.";
-        //        return RedirectToAction("UserTable");
-        //    }
+            if (!Result.Success)
+            {
+                TempData["ErrorMessage"] = Result.Message;
+                return RedirectToAction("UserTable");
+            }
 
-            
-        //    var teachesList = _context.Teaches.Where(t => t.InstructorId == instructorId).ToList();
-
-        //    foreach (var teach in teachesList)
-        //    {
-                
-        //        var section = _context.Sections.FirstOrDefault(s => s.TeachesId == teach.TeachesId);
-        //        if (section != null)
-        //        {
-        //            section.TeachesId = null;
-        //            _context.Sections.Update(section);
-        //        }
-
-        //        _context.Teaches.Remove(teach);
-        //    }
-
-            
-        //    _context.Instructors.Remove(instructor);
-
-            
-        //    var instructorRole = _context.Roles.FirstOrDefault(r => r.name == "Instructor");
-        //    if (instructorRole != null)
-        //    {
-        //        var userRole = _context.UserRoles.FirstOrDefault(ur => ur.UserId == instructor.UserId && ur.RoleId == instructorRole.Id);
-        //        if (userRole != null)
-        //        {
-        //            _context.UserRoles.Remove(userRole);
-        //        }
-        //    }
-
-        //    _context.SaveChanges();
-        //    TempData["SuccessMessage"] = "Instructor deleted successfully.";
-        //    return RedirectToAction("UserTable");
-        //}
+            TempData["SuccessMessage"] = Result.Message;
+            return RedirectToAction("UserTable");
+        }
 
 
         [HttpPost]
@@ -469,56 +430,6 @@ namespace DebugModels.Controllers
             var courses = _context.Courses.Include(c => c.Department).Include(c => c.PreRegs).ThenInclude(pr => pr.PreRegCourse).ToList();
             return View(courses);
         }
-
-         
-
-        //[HttpPost]
-        //public IActionResult DeleteCourse(int id)
-        //{
-        //    var course = _context.Courses
-        //        .Include(c => c.Sections)
-        //        .Include(c => c.PreRegs)
-        //        .FirstOrDefault(c => c.CourseId == id);
-
-        //    if (course == null)
-        //    {
-        //        TempData["ErrorMessage"] = "Course not found.";
-        //        return RedirectToAction("CourseTable");
-        //    }
-
-        //    foreach (var sec in course.Sections.ToList())
-        //    {
-        //        var teaches = _context.Teaches.FirstOrDefault(t => t.TeachesId == sec.TeachesId);
-        //        if (teaches != null) _context.Teaches.Remove(teaches);
-
-        //        if (sec.TimeSlot != null)
-        //        {
-        //            var timeSlotId = sec.TimeSlotId;
-        //            var isTimeSlotShared = _context.Sections.Any(s => s.TimeSlotId == timeSlotId && s.SectionsId != sec.SectionsId);
-        //            if (!isTimeSlotShared && sec.TimeSlot != null)
-        //            {
-        //                _context.TimeSlots.Remove(sec.TimeSlot);
-        //            }
-        //        }
-
-        //        _context.Sections.Remove(sec);
-        //    }
-
-           
-        //    _context.PreRegs.RemoveRange(course.PreRegs);
-
-            
-        //    _context.Courses.Remove(course);
-        //    _context.SaveChanges();
-
-        //    TempData["SuccessMessage"] = "Course and its related sections deleted successfully.";
-        //    return RedirectToAction("CourseTable");
-        //}
-
-
-        
-
-        //
 
 
 
@@ -1253,8 +1164,69 @@ namespace DebugModels.Controllers
         }
 
 
+        [HttpPost]
+        public async Task<IActionResult> DeleteDepartment(int id)
+        {
+            var Result = await _departmentService.DeleteDepartment(id);
 
+            if (!Result.Success)
+            {
+                TempData["ErrorMessage"] = Result.Message;
+                return RedirectToAction("DepartmentTable");
+            }
 
+            TempData["SuccessMessage"] = Result.Message;
+            return RedirectToAction("DepartmentTable");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SelectInstructorForDelete(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Instructors)
+                .ThenInclude(i => i.Department)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null || user.Instructors == null || user.Instructors.Count == 0)
+            {
+                TempData["ErrorMessage"] = "No instructor roles now found for this user.";
+                return RedirectToAction("UserTable");
+            }
+
+            return View(user.Instructors);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SelectStudnetForDelete(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Students)
+                .ThenInclude(i => i.Department)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null || user.Students == null || user.Students.Count == 0)
+            {
+                TempData["ErrorMessage"] = "No Student roles now found for this user.";
+                return RedirectToAction("UserTable");
+            }
+
+            return View(model:user.Students);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteStudent(int StudentId)
+        {
+            var Result = await _StudentService.DeleteStudent(StudentId);
+
+            if (!Result.Success)
+            {
+                TempData["ErrorMessage"] = Result.Message;
+                return RedirectToAction("UserTable");
+            }
+
+            TempData["SuccessMessage"] = Result.Message;
+            return RedirectToAction("UserTable");
+        }
 
 
     }

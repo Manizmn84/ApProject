@@ -64,7 +64,7 @@
                     <td>
                         @if (isInstructor)
                         {
-                            <form asp-action="DeleteInstructor" method="post" asp-controller="Admin" style="display:inline;">
+                            <form asp-action="SelectInstructorForDelete" method="get" asp-controller="Admin" style="display:inline;">
                                 <input type="hidden" name="userId" value="@user.Id" />
                                 <button type="submit" class="btn btn-sm btn-danger"
                                         onclick="return confirm('Are you sure you want to remove this instructor?');">
@@ -83,7 +83,7 @@
                     <td>
                         @if (isStudent)
                         {
-                            <form asp-action="DeleteStudent" method="post" asp-controller="Admin" style="display:inline;">
+                            <form asp-action="SelectStudnetForDelete" method="get" asp-controller="Admin" style="display:inline;">
                                 <input type="hidden" name="userId" value="@user.Id" />
                                 <button type="submit" class="btn btn-sm btn-danger"
                                         onclick="return confirm('Are you sure you want to remove this student?');">
