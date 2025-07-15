@@ -944,6 +944,7 @@ namespace DebugModels.Controllers
             var section = _context.Sections
                 .Include(s => s.Takes)
                 .Include(s => s.Course).ThenInclude(c => c.Department)
+                .Include(s => s.Course).ThenInclude(c => c.PreRegs)
                 .Include(s => s.ClassRoom)
                 .Include(s => s.TimeSlot)
                 .FirstOrDefault(s => s.SectionsId == sectionId);
@@ -956,6 +957,9 @@ namespace DebugModels.Controllers
 
             var student = _context.Students
                 .Include(s => s.User)
+                .Include(s => s.Takes)
+                    .ThenInclude(t => t.Sections)
+                        .ThenInclude(sec => sec.Course)
                 .Include(s => s.Takes)
                     .ThenInclude(t => t.Sections)
                         .ThenInclude(sec => sec.TimeSlot)
@@ -1013,6 +1017,24 @@ namespace DebugModels.Controllers
             }
 
             
+            var prereqCourseIds = section.Course?.PreRegs.Select(pr => pr.PreRegCourseId).Where(id => id != null).Select(id => id.Value).ToList();
+
+            if (prereqCourseIds != null && prereqCourseIds.Any())
+            {
+                var studentCompletedCourses = student.Takes
+                    .Where(t => t.Sections?.Course != null)
+                    .Select(t => t.Sections.Course.CourseId)
+                    .ToList();
+
+                var missing = prereqCourseIds.Except(studentCompletedCourses).ToList();
+                if (missing.Any())
+                {
+                    TempData["ErrorMessage"] = "Student has not completed prerequisite course(s) required for this class.";
+                    return RedirectToAction("AssignStudent", new { sectionId });
+                }
+            }
+
+            
             var take = new Takes
             {
                 StudentId = studentId,
@@ -1027,11 +1049,13 @@ namespace DebugModels.Controllers
         }
 
 
+
         [HttpPost]
         public IActionResult UnassignStudent(int takesId)
         {
             var takes = _context.Takes
                 .Include(t => t.Sections)
+                    .ThenInclude(s => s.Course)
                 .Include(t => t.Student)
                 .FirstOrDefault(t => t.TakesId == takesId);
 
@@ -1041,12 +1065,44 @@ namespace DebugModels.Controllers
                 return RedirectToAction("SectionTable");
             }
 
+            var studentId = takes.StudentId;
+            var courseId = takes.Sections?.Course?.CourseId;
+
+            if (courseId == null)
+            {
+                TempData["ErrorMessage"] = "Course information is missing.";
+                return RedirectToAction("SectionTable");
+            }
+
+            
+            var dependentCourseIds = _context.PreRegs
+                .Where(p => p.PreRegCourseId == courseId)
+                .Select(p => p.CoureId)
+                .ToList();
+
+            if (dependentCourseIds.Any())
+            {
+                var studentCurrentCourses = _context.Takes
+                    .Where(t => t.StudentId == studentId)
+                    .Select(t => t.Sections.CourseId)
+                    .ToList();
+
+                var blockingCourses = dependentCourseIds.Intersect(studentCurrentCourses).ToList();
+                if (blockingCourses.Any())
+                {
+                    TempData["ErrorMessage"] = "Cannot unassign this student. This course is a prerequisite for another course the student is currently taking.";
+                    return RedirectToAction("SectionTable");
+                }
+            }
+
+            
             _context.Takes.Remove(takes);
             _context.SaveChanges();
 
             TempData["SuccessMessage"] = "Student unassigned from section successfully.";
             return RedirectToAction("SectionTable");
         }
+
 
 
 
