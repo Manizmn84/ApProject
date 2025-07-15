@@ -790,7 +790,6 @@ namespace DebugModels.Controllers
                 return RedirectToAction("SectionTable");
             }
 
-            
             var instructors = _context.Instructors
                 .Include(i => i.User)
                 .Where(i => i.DepartmentId == section.Course.DepartmentId)
@@ -798,9 +797,9 @@ namespace DebugModels.Controllers
 
             ViewBag.Instructors = instructors;
 
-            
             return View(section);
         }
+
 
 
 
@@ -825,20 +824,25 @@ namespace DebugModels.Controllers
             }
 
             var instructor = _context.Instructors
-                .Include(i => i.Department)
+                .Include(i => i.User)
                 .FirstOrDefault(i => i.InstructorId == instructorId);
 
-            if (instructor == null)
+            if (instructor == null || instructor.UserId == null)
             {
-                TempData["ErrorMessage"] = "Instructor not found.";
+                TempData["ErrorMessage"] = "Instructor or their user not found.";
                 return RedirectToAction("SectionTable");
             }
 
+            var userId = instructor.UserId.Value;
 
             bool timeConflict = _context.Sections
                 .Include(s => s.TimeSlot)
                 .Include(s => s.Teaches)
-                .Where(s => s.Teaches != null && s.Teaches.InstructorId == instructorId && s.TimeSlot != null)
+                    .ThenInclude(t => t.Instructor)
+                .Where(s => s.Teaches != null &&
+                            s.Teaches.Instructor != null &&
+                            s.Teaches.Instructor.UserId == userId &&
+                            s.TimeSlot != null)
                 .Any(s =>
                     s.TimeSlot.Day == section.TimeSlot.Day &&
                     section.TimeSlot.StartTime.TimeOfDay < s.TimeSlot.EndTime.TimeOfDay &&
@@ -851,7 +855,7 @@ namespace DebugModels.Controllers
                 return RedirectToAction("SectionTable");
             }
 
-         
+            
             var teaches = new Teaches
             {
                 InstructorId = instructorId,
@@ -861,7 +865,6 @@ namespace DebugModels.Controllers
             _context.Teaches.Add(teaches);
             _context.SaveChanges();
 
-            
             section.TeachesId = teaches.TeachesId;
             _context.SaveChanges();
 
@@ -886,10 +889,10 @@ namespace DebugModels.Controllers
             {
                 var teachesId = section.TeachesId;
 
-                
+
                 section.TeachesId = null;
 
-                
+
                 var teaches = _context.Teaches.FirstOrDefault(t => t.TeachesId == teachesId);
                 if (teaches != null)
                 {
@@ -906,8 +909,6 @@ namespace DebugModels.Controllers
 
             return RedirectToAction("SectionTable");
         }
-
-
         public IActionResult AssignStudent(int sectionId)
         {
             var section = _context.Sections
@@ -954,15 +955,19 @@ namespace DebugModels.Controllers
             }
 
             var student = _context.Students
-                .Include(s => s.Takes).ThenInclude(t => t.Sections).ThenInclude(sec => sec.TimeSlot)
-                .Include(s => s.Department)
+                .Include(s => s.User)
+                .Include(s => s.Takes)
+                    .ThenInclude(t => t.Sections)
+                        .ThenInclude(sec => sec.TimeSlot)
                 .FirstOrDefault(s => s.StudentId == studentId);
 
-            if (student == null)
+            if (student == null || student.UserId == null)
             {
-                TempData["ErrorMessage"] = "Student not found.";
+                TempData["ErrorMessage"] = "Student not found or has no associated user.";
                 return RedirectToAction("AssignStudent", new { sectionId });
             }
+
+            int userId = student.UserId.Value;
 
             
             bool alreadyAssigned = _context.Takes.Any(t => t.StudentId == studentId && t.SectionId == sectionId);
@@ -990,26 +995,21 @@ namespace DebugModels.Controllers
             }
 
             
-            var studentSections = student.Takes
-                .Where(t => t.Sections?.TimeSlot != null)
-                .Select(t => t.Sections)
-                .ToList();
+            var conflict = _context.Takes
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.TimeSlot)
+                .Include(t => t.Student)
+                .Where(t => t.Student.UserId == userId && t.Sections.TimeSlot != null)
+                .Any(t =>
+                    t.Sections.TimeSlot.Day == section.TimeSlot.Day &&
+                    section.TimeSlot.StartTime.TimeOfDay < t.Sections.TimeSlot.EndTime.TimeOfDay &&
+                    section.TimeSlot.EndTime.TimeOfDay > t.Sections.TimeSlot.StartTime.TimeOfDay
+                );
 
-            foreach (var s in studentSections)
+            if (conflict)
             {
-                if (s.TimeSlot?.Day == section.TimeSlot?.Day)
-                {
-                    var start1 = s.TimeSlot.StartTime.TimeOfDay;
-                    var end1 = s.TimeSlot.EndTime.TimeOfDay;
-                    var start2 = section.TimeSlot.StartTime.TimeOfDay;
-                    var end2 = section.TimeSlot.EndTime.TimeOfDay;
-
-                    if (start1 < end2 && start2 < end1)
-                    {
-                        TempData["ErrorMessage"] = "Time conflict detected with another class.";
-                        return RedirectToAction("AssignStudent", new { sectionId });
-                    }
-                }
+                TempData["ErrorMessage"] = "Time conflict detected with another class.";
+                return RedirectToAction("AssignStudent", new { sectionId });
             }
 
             
