@@ -1,4 +1,8 @@
 using DebugModels.Data;
+using DebugModels.Services.Course;
+using DebugModels.Services.Department;
+using DebugModels.Services.Instructor;
+using DebugModels.Services.Student;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ProjectContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IInstructorService, InstructorService>();
+builder.Services.AddScoped<IStudentService , StudentService>();
 
 var app = builder.Build();
 

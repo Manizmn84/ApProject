@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
 
 namespace DebugModels.Models
@@ -16,8 +17,10 @@ namespace DebugModels.Models
         public string Building { get; set; }
 
         [Required(ErrorMessage = "Budget is required")]
-        [Range(0, double.MaxValue, ErrorMessage = "Budget must be a positive number")]
+        [Range(0, 99999999.99, ErrorMessage = "Budget cannot exceed 99,999,999.99")]
+        [Column(TypeName = "decimal(10,2)")]
         public decimal Budget { get; set; }
+
 
         #region
         public List<Instructor>? Instructors { get; set; }

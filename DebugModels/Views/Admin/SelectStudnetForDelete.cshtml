@@ -1,0 +1,29 @@
+﻿@model List<DebugModels.Models.Student>
+
+<h3>Select Student Role to Delete</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Department</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in Model)
+        {
+            <tr>
+                <td>@student.Department?.Name</td>
+                <td>
+                    <form asp-action="DeleteStudent" method="post">
+                        <input type="hidden" name="StudentId" value="@student.StudentId" />
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure you want to delete this role?');">
+                            🗑️ Delete This Role
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
