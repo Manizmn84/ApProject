@@ -33,8 +33,8 @@
         <tbody>
             @foreach (var user in Model)
             {
-                var isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 7) ?? false;
-                var isStudent = user.UserRoles?.Any(ur => ur.RoleId == 8) ?? false;
+                var isInstructor = user.UserRoles?.Any(ur => ur.RoleId == 1) ?? false;
+                var isStudent = user.UserRoles?.Any(ur => ur.RoleId == 2) ?? false;
 
                 <tr>
                     <td>@user.Id</td>

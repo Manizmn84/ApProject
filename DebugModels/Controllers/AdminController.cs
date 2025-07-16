@@ -6,6 +6,7 @@ using DebugModels.Services.Course;
 using DebugModels.Services.Department;
 using DebugModels.Services.Instructor;
 using DebugModels.Services.Student;
+using YourProjectNamespace.Utilities;
 
 namespace DebugModels.Controllers
 {
@@ -49,7 +50,7 @@ namespace DebugModels.Controllers
                 first_name = first_name,
                 last_name = last_name,
                 email = email,
-                hashed_password = hashed_password,
+                hashed_password = PasswordHelper.HashPassword(hashed_password),
                 created_at = DateTime.Now,
             };
 

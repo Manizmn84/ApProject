@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DebugModels.Migrations
 {
     [DbContext(typeof(ProjectContext))]
-    [Migration("20250711135103_EditDepartment")]
-    partial class EditDepartment
+    [Migration("20250716191423_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
