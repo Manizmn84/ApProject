@@ -18,6 +18,7 @@ namespace DebugModels.Services.Course
             var course = await _context.Courses
                 .Include(c => c.Sections).ThenInclude(s => s.Takes)
                 .Include(c => c.Sections).ThenInclude(s => s.Teaches)
+                .Include(c => c.Sections).ThenInclude(s => s.TimeSlot)
                 .Include(c => c.PreRegs)
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
 
@@ -25,7 +26,7 @@ namespace DebugModels.Services.Course
             {
                 return OperationResult.Fail("Don`t have Course With That Id");
             }
-
+            
             foreach (var section in course.Sections)
             {
                 if (section.Teaches != null)
