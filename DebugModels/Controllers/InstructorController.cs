@@ -125,7 +125,7 @@ public class InstructorController : Controller
 
         if (id == null)
         {
-            TempData["ErrorMessage"] = "Section ID is missing.";
+            TempData["ErrorMessage"] = "Section IDd is missing.";
             return RedirectToAction("ClassList");
         }
 
@@ -133,6 +133,7 @@ public class InstructorController : Controller
             .Include(s => s.Takes)
                 .ThenInclude(t => t.Student)
             .Include(s => s.Teaches)
+            .Include(s => s.Course)
                 .FirstOrDefaultAsync(s => s.SectionsId == id && s.Teaches.InstructorId == profileId);
 
         if (section == null)
@@ -149,6 +150,8 @@ public class InstructorController : Controller
             .Where(t => t.SectionId == id)
             .ToListAsync();
 
+        ViewBag.CouserName = section.Course.Title;
+        ViewBag.Code = section.Code;
 
         return View(takesList);
 
@@ -179,7 +182,7 @@ public class InstructorController : Controller
 
         if (takeId == null)
         {
-            TempData["ErrorMessage"] = "Section ID is missing.";
+            TempData["ErrorMessage"] = "Take ID is missing.";
             return RedirectToAction("ClassList");
         }
 
@@ -194,4 +197,91 @@ public class InstructorController : Controller
 
         return RedirectToAction("ClassList");
     }
+
+    public async Task<IActionResult> AssignGrade(int takeId)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        if (takeId == null)
+        {
+            TempData["ErrorMessage"] = "Take ID is missing.";
+            return RedirectToAction("ClassList");
+        }
+
+        var takes = _context.Takes
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Course)
+                .Include(t => t.Student)
+                    .ThenInclude(s => s.User)
+                .Include(t => t.Student)
+                    .ThenInclude(s => s.Department)
+                .FirstOrDefault(t => t.TakesId == takeId);
+        if (takes == null)
+        {
+            TempData["ErrorMessage"] = "Take takes is missing.";
+            return RedirectToAction("ClassList");
+        }
+
+        ViewBag.firstName = takes.Student.User.first_name;
+        ViewBag.lastName = takes.Student.User.last_name;
+        ViewBag.courseName = takes.Sections.Course.Title;
+        ViewBag.DepartmentName = takes.Student.Department.Name;
+        ViewBag.Id = takeId;
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AssignGrade(int takeId, int grade)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var takes = await _context.Takes.Include(t => t.Sections).FirstOrDefaultAsync(t => t.TakesId == takeId);
+        if (takes == null)
+        {
+            TempData["ErrorMessage"] = "Record not found.";
+            return RedirectToAction("ClassList");
+        }
+
+        if (grade < 0 || grade > 20)
+        {
+            TempData["ErrorMessage"] = "Grade must be between 0 and 20.";
+            return RedirectToAction("AssignGrade", new { takeId });
+        }
+
+
+        takes.grade = grade;
+        _context.Takes.Update(takes);
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Grade assigned successfully.";
+        return RedirectToAction("StudentsInSection", new { id = takes.Sections.SectionsId});
+    }
+
 }
