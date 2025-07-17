@@ -3,6 +3,7 @@ using DebugModels.Services.Course;
 using DebugModels.Services.Department;
 using DebugModels.Services.Instructor;
 using DebugModels.Services.Student;
+using DebugModels.Services.User;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,8 +16,13 @@ builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IInstructorService, InstructorService>();
 builder.Services.AddScoped<IStudentService , StudentService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddSession();
 
 var app = builder.Build();
+app.UseSession();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -35,6 +41,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Login}/{action=LoginUsers}/{id?}");
 
 app.Run();

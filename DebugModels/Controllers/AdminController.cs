@@ -25,19 +25,45 @@ namespace DebugModels.Controllers
             _InstructorService = InstructorService;
             _StudentService = studentService;
         }
+
+        public bool IsCan()
+        {
+            var role = HttpContext.Session.GetString("Role");
+            var password = HttpContext.Session.GetString("Password");
+
+            if (role != "Admin" || password != "rootIust402")
+                return false;
+            return true;
+        }
+
         public IActionResult Index()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             return View();
         }
 
         public IActionResult CreateUser()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             return View();
         }
 
         [HttpPost]
         public IActionResult CreateUser(string first_name, string last_name, string email, string hashed_password)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var exsitingUser = _context.Users.FirstOrDefault(u => u.email == email);
 
             if (exsitingUser != null)
@@ -62,6 +88,11 @@ namespace DebugModels.Controllers
 
         public IActionResult UserTable()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var users = _context.Users.Include(users => users.UserRoles ).ThenInclude(userRole => userRole.Role).ToList();
             return View(users);
 
@@ -69,13 +100,23 @@ namespace DebugModels.Controllers
 
         public IActionResult CreateDepartment()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             return View();
         }
 
         [HttpPost]
         public IActionResult CreateDepartment(Department department)
         {
-            if(!ModelState.IsValid)
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+            if (!ModelState.IsValid)
                 return View(department);
 
             var IsExistDepartments = _context.Departments.Any(dp => dp.Name.ToLower() == department.Name.ToLower());
@@ -103,6 +144,11 @@ namespace DebugModels.Controllers
         [HttpGet]
         public IActionResult EditDepartment(int id)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var department = _context.Departments.Find(id);
             if (department == null)
             {
@@ -116,6 +162,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult EditDepartment(Department department)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             if (!ModelState.IsValid)
                 return View(department);
 
@@ -148,6 +199,11 @@ namespace DebugModels.Controllers
 
         public IActionResult DepartmentTable()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var departments = _context.Departments.ToList();
             return View(departments);
         }
@@ -155,6 +211,11 @@ namespace DebugModels.Controllers
 
         public IActionResult CreateInstructor(int userId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
 
             if (user == null)
@@ -178,6 +239,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult CreateInstructor(Instructor instructor , int userId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
             {
@@ -258,6 +324,11 @@ namespace DebugModels.Controllers
 
         public IActionResult CreateStudent(int userId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
 
             if (user == null)
@@ -279,6 +350,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult CreateStudent(int userId, DateTime enrollment_date, int departmentId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var user = _context.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
             {
@@ -341,6 +417,11 @@ namespace DebugModels.Controllers
 
         public IActionResult CreateCourse()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var departments = _context.Departments.ToList();
             ViewBag.Departments = departments;
             ViewBag.Courses = new List<Course>();
@@ -361,6 +442,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteInstructor(int instructorId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var Result = await _InstructorService.DeleteInstructor(instructorId);
 
             if (!Result.Success)
@@ -377,6 +463,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult CreateCourse(Course course, int DepartmentId, List<int>? PreReqCourseIds)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             if (!int.TryParse(course.Unit, out int unitNumber))
             {
                 ModelState.AddModelError("Unit", "Unit must be a valid integer number.");
@@ -428,6 +519,11 @@ namespace DebugModels.Controllers
 
         public IActionResult CourseTable()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var courses = _context.Courses.Include(c => c.Department).Include(c => c.PreRegs).ThenInclude(pr => pr.PreRegCourse).ToList();
             return View(courses);
         }
@@ -436,6 +532,11 @@ namespace DebugModels.Controllers
 
         public IActionResult CreateSection()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             ViewBag.Courses = _context.Courses.ToList();
             ViewBag.ClassRooms = _context.ClassRooms.ToList();
             ViewBag.AllDays = new[] { "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" };
@@ -457,6 +558,11 @@ namespace DebugModels.Controllers
             string description
         )
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             ViewBag.Courses = _context.Courses.ToList();
             ViewBag.ClassRooms = _context.ClassRooms.ToList();
             ViewBag.AllDays = new[] { "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" };
@@ -654,6 +760,11 @@ namespace DebugModels.Controllers
 
         public IActionResult SectionTable()
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var sections = _context.Sections
                 .Include(s => s.Course)
                 .ThenInclude(c => c.Department)
@@ -674,6 +785,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult DeleteSection(int sectionId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var section = _context.Sections
                 .Include(s => s.Teaches)
                 .Include(s => s.Takes)
@@ -718,6 +834,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteCourse(int courseId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var Result = await _courseService.DeleteCourse(courseId);
 
             if (!Result.Success)
@@ -732,6 +853,11 @@ namespace DebugModels.Controllers
 
         public IActionResult AssignInstructor(int sectionId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var section = _context.Sections
                 .Include(s => s.Course)
                     .ThenInclude(c => c.Department)
@@ -762,6 +888,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult AssignInstructor(int sectionId, int instructorId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var section = _context.Sections
                 .Include(s => s.TimeSlot)
                 .Include(s => s.Teaches)
@@ -874,6 +1005,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult UnassignInstructor(int sectionId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var section = _context.Sections
                 .Include(s => s.Teaches)
                 .FirstOrDefault(s => s.SectionsId == sectionId);
@@ -910,6 +1046,11 @@ namespace DebugModels.Controllers
         }
         public IActionResult AssignStudent(int sectionId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var section = _context.Sections
                 .Include(s => s.Course).ThenInclude(c => c.Department)
                 .Include(s => s.ClassRoom)
@@ -940,6 +1081,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult AssignStudent(int sectionId, int studentId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var section = _context.Sections
                 .Include(s => s.Takes)
                 .Include(s => s.Course).ThenInclude(c => c.Department)
@@ -1114,6 +1260,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult UnassignStudent(int takesId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var takes = _context.Takes
                 .Include(t => t.Sections)
                     .ThenInclude(s => s.Course)
@@ -1168,6 +1319,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteDepartment(int id)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var Result = await _departmentService.DeleteDepartment(id);
 
             if (!Result.Success)
@@ -1183,6 +1339,11 @@ namespace DebugModels.Controllers
         [HttpGet]
         public async Task<IActionResult> SelectInstructorForDelete(int userId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var user = await _context.Users
                 .Include(u => u.Instructors)
                 .ThenInclude(i => i.Department)
@@ -1200,6 +1361,11 @@ namespace DebugModels.Controllers
         [HttpGet]
         public async Task<IActionResult> SelectStudnetForDelete(int userId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var user = await _context.Users
                 .Include(u => u.Students)
                 .ThenInclude(i => i.Department)
@@ -1217,6 +1383,11 @@ namespace DebugModels.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteStudent(int StudentId)
         {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
             var Result = await _StudentService.DeleteStudent(StudentId);
 
             if (!Result.Success)
