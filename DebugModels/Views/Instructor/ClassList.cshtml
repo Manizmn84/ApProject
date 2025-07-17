@@ -1,0 +1,42 @@
+﻿@model List<DebugModels.Models.Sections>
+
+@{
+    ViewData["Title"] = "Class List";
+    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+}
+
+<h2 class="mb-4">Your Classes</h2>
+
+<table class="table table-hover table-bordered align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Course Name</th>
+            <th>Course Code</th>
+            <th>Classroom</th>
+            <th>Time Slot</th>
+            <th>Students Count</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Course?.Title</td>
+                <td>@item.ClassRoom?.RoomNumber</td>
+                <td>@item.ClassRoom?.buliding</td>
+                <td>
+                    @item.TimeSlot?.Day -
+                    @item.TimeSlot?.StartTime.ToShortTimeString() 
+                    @item.TimeSlot?.EndTime.ToShortTimeString()
+                </td>
+                <td>@item.Takes?.Count()</td>
+                <td>
+                    <a asp-controller="Instructor" asp-action="StudentsInSection" asp-route-id="@item.SectionsId" class="btn btn-outline-primary btn-sm">
+                        View Students
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
