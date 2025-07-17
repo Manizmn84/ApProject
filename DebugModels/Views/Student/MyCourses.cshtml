@@ -1,0 +1,75 @@
+﻿@model IEnumerable<IGrouping<object, DebugModels.Models.Takes>>
+
+@{
+    ViewData["Title"] = "My Courses";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">My Assigned Courses</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @foreach (var group in Model)
+    {
+        var key = (dynamic)group.Key;
+
+        <div class="card mb-4 shadow border-dark">
+            <div class="card-header text-white" style="background-color: #000000;">
+                <strong>Year:</strong> @key.year | <strong>Semester:</strong> @key.Semester
+            </div>
+            <div class="card-body bg-white">
+                <table class="table table-bordered table-sm table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course Title</th>
+                            <th>Instructor</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Final Exam</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in group)
+                        {
+                            <tr>
+                                <td>@item.Sections.Course.Title</td>
+                                <td>@($"{item.Sections.Teaches?.Instructor?.User?.first_name} {item.Sections.Teaches?.Instructor?.User?.last_name}")</td>
+                                <td>@item.Sections.TimeSlot?.StartTime.ToString(@"hh\:mm")</td>
+                                <td>@item.Sections.TimeSlot?.EndTime.ToString(@"hh\:mm")</td>
+                                <td>@item.Sections.final_exam_date.ToString("yyyy/MM/dd")</td>
+                                <td>
+                                    @if (item.grade < 10)
+                                    {
+                                        <form asp-action="UnassignCourse" method="post" class="d-inline">
+                                            <input type="hidden" name="takesId" value="@item.TakesId" />
+                                            <button type="submit" class="btn btn-outline-info btn-sm">Unassign</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Passed</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+
+
+
+
+
