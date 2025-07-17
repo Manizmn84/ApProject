@@ -1,23 +1,27 @@
 ﻿using DebugModels.Data;
 using DebugModels.Models;
 using DebugModels.Models.ViewModels;
+using DebugModels.Services.Instructor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 public class InstructorController : Controller
 {
     private readonly ProjectContext _context;
+    private readonly IInstructorService _InstructorService;
 
-    public InstructorController(ProjectContext context)
+    public InstructorController(ProjectContext context , IInstructorService InstructorService)
     {
         _context = context;
+        _InstructorService = InstructorService;
     }
 
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
 
-        TempData["SuccessMessage"] = "Logout SuccessFully";
+        TempData["SuccessMessage"] = "Logout Successfully";
 
 
         return RedirectToAction("LoginUsers", "Login");
@@ -148,5 +152,46 @@ public class InstructorController : Controller
 
         return View(takesList);
 
+    }
+
+    public async Task<IActionResult> RemoveStudent(int? takeId)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        if (takeId == null)
+        {
+            TempData["ErrorMessage"] = "Section ID is missing.";
+            return RedirectToAction("ClassList");
+        }
+
+        var result = await _InstructorService.RemoveStudent(takeId);
+
+        if (!result.Success)
+        {
+            TempData["ErrorMessage"] = result.Message;
+            return RedirectToAction("ClassList");
+        }
+
+
+        return RedirectToAction("ClassList");
     }
 }
