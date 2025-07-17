@@ -1,0 +1,40 @@
+﻿@model List<DebugModels.Models.Takes>
+
+@{
+    ViewData["Title"] = "Students in Section";
+    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+}
+
+<h2>Students in Section</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>Department</th>
+            <th>Grade</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var take in Model)
+        {
+            <tr>
+                <td>@(take.Student.User.first_name + " " + take.Student.User.last_name)</td>
+                <td>@take.Student.Department?.Name</td>
+                <td>@take.grade</td>
+                <td>
+                    @if (take.grade == 0)
+                    {
+                        <a asp-controller="Instructor" asp-action="AssignGrade" asp-route-takeId="@take.TakesId" class="btn btn-success btn-sm">Assign Grade</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Instructor" asp-action="EditGrade" asp-route-takeId="@take.TakesId" class="btn btn-warning btn-sm">Edit Grade</a>
+                    }
+                    <a asp-controller="Instructor" asp-action="RemoveStudent" asp-route-takeId="@take.TakesId" class="btn btn-danger btn-sm ms-2">Remove</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

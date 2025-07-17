@@ -95,4 +95,58 @@ public class InstructorController : Controller
 
         return View(sections);
     }
+
+    public async Task<IActionResult> StudentsInSection(int? id)
+    {
+        var role = HttpContext.Session.GetString("Role");
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        if (id == null)
+        {
+            TempData["ErrorMessage"] = "Section ID is missing.";
+            return RedirectToAction("ClassList");
+        }
+
+        var section = await _context.Sections
+            .Include(s => s.Takes)
+                .ThenInclude(t => t.Student)
+            .Include(s => s.Teaches)
+                .FirstOrDefaultAsync(s => s.SectionsId == id && s.Teaches.InstructorId == profileId);
+
+        if (section == null)
+        {
+            TempData["ErrorMessage"] = "You do not have access to this section.";
+            return RedirectToAction("ClassList");
+        }
+
+        var takesList = await _context.Takes
+            .Include(t => t.Student)
+                .ThenInclude(s => s.Department)
+            .Include(t => t.Student)
+                .ThenInclude(s => s.User)
+            .Where(t => t.SectionId == id)
+            .ToListAsync();
+
+
+        return View(takesList);
+
+    }
 }
