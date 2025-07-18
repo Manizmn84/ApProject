@@ -1,5 +1,61 @@
-﻿@model DebugModels.Models.Student
+﻿@model DebugModels.Models.ViewModels.StudentDashboardViewModel
 
-<h2>Welcome, @Model.User?.first_name!</h2>
-<p>Department: @Model.Department?.Name</p>
-<p>Hire Date: @Model.enrollment_date.ToShortDateString()</p>
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+
+<style>
+    .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+        .card-hover:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+        }
+</style>
+
+<h2 class="mb-4">Welcome, @Model.Student.User?.first_name!</h2>
+
+<div class="row g-4">
+
+    <!-- Courses Count Card -->
+    <div class="col-md-4">
+        <div class="card text-white bg-primary shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-book-fill"></i> Courses Taken
+                </h5>
+                <p class="fs-3">@Model.CourseCount</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passed Units Card -->
+    <div class="col-md-4">
+        <div class="card text-white bg-success shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-award-fill"></i> Passed Units
+                </h5>
+                <p class="fs-3">@Model.PassedUnits</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Info Card -->
+    <div class="col-md-4">
+        <div class="card border-secondary shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-person-badge"></i> Your Info
+                </h5>
+                <p class="mb-1"><strong>Name:</strong> @Model.Student.User?.first_name @Model.Student.User?.last_name</p>
+                <p class="mb-1"><strong>Department:</strong> @Model.Student.Department?.Name</p>
+                <p class="mb-0"><strong>Enrollment Date:</strong> @Model.Student.enrollment_date.ToShortDateString()</p>
+            </div>
+        </div>
+    </div>
+
+</div>

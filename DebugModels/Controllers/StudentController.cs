@@ -1,4 +1,5 @@
 ﻿using DebugModels.Data;
+using DebugModels.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,8 +24,12 @@ public class StudentController : Controller
         }
 
         var student = _context.Students
-            .Include(i => i.Department)
-            .FirstOrDefault(s => s.StudentId== profileId);
+            .Include(s => s.User)
+            .Include(s => s.Department)
+            .Include(s => s.Takes)
+                .ThenInclude(t => t.Sections)
+                    .ThenInclude(sec => sec.Course)
+            .FirstOrDefault(s => s.StudentId == profileId);
 
         if (student == null)
         {
@@ -32,8 +37,21 @@ public class StudentController : Controller
             return RedirectToAction("LoginUsers", "Login");
         }
 
-        return View(student);
+        int courseCount = student.Takes.Count;
+        int passedUnits = student.Takes
+            .Where(t => t.grade >= 10)
+            .Sum(t => int.TryParse(t.Sections.Course?.Unit, out var u) ? u : 0);
+
+        var viewModel = new StudentDashboardViewModel
+        {
+            Student = student,
+            CourseCount = courseCount,
+            PassedUnits = passedUnits
+        };
+
+        return View(viewModel);
     }
+
 
     public IActionResult MyCourses()
     {
@@ -206,6 +224,14 @@ public class StudentController : Controller
 
         TempData["SuccessMessage"] = "Course unassigned successfully.";
         return RedirectToAction("MyCourses");
+    }
+
+
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear(); 
+        TempData["SuccessMessage"] = "Logout successfully.";
+        return RedirectToAction("LoginUsers", "Login");
     }
 
 
