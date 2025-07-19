@@ -1,0 +1,94 @@
+﻿@model DebugModels.Models.ViewModels.AdminDashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<style>
+    .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+        .card-hover:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+        }
+</style>
+
+<h2 class="mb-4">Welcome, Admin!</h2>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-bank2"></i> Departments</h5>
+                <p class="fs-3">@Model.DepartmentCount</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-info shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-people-fill"></i> Total Users</h5>
+                <p class="fs-3">@Model.UserCount</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-success shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person-check-fill"></i> Instructors</h5>
+                <p class="fs-3">@Model.InstructorCount</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-secondary shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-mortarboard-fill"></i> Students</h5>
+                <p class="fs-3">@Model.StudentCount</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-warning shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-book-fill"></i> Courses</h5>
+                <p class="fs-3">@Model.CourseCount</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-dark shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-journal-bookmark-fill"></i> Sections</h5>
+                <p class="fs-3">@Model.SectionCount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="mt-5" />
+
+<div class="mt-4">
+    <h4>Quick Access</h4>
+    <div class="btn-group flex-wrap">
+        <a href="@Url.Action("CreateUser", "Admin")" class="btn btn-outline-primary m-1">Create User</a>
+        <a href="@Url.Action("CreateSection", "Admin")" class="btn btn-outline-primary m-1">Create Section</a>
+        <a href="@Url.Action("CreateDepartment", "Admin")" class="btn btn-outline-primary m-1">Create Department</a>
+        <a href="@Url.Action("CreateCourse", "Admin")" class="btn btn-outline-primary m-1">Create Course</a>
+
+        <a href="@Url.Action("UserTable", "Admin")" class="btn btn-outline-secondary m-1">User Table</a>
+        <a href="@Url.Action("SectionTable", "Admin")" class="btn btn-outline-secondary m-1">Section Table</a>
+        <a href="@Url.Action("CourseTable", "Admin")" class="btn btn-outline-secondary m-1">Course Table</a>
+        <a href="@Url.Action("DepartmentTable", "Admin")" class="btn btn-outline-secondary m-1">Department Table</a>
+    </div>
+</div>
+

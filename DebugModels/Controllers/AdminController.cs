@@ -1,4 +1,5 @@
 ﻿using DebugModels.Data;
+using DebugModels.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using DebugModels.Models;
 using Microsoft.EntityFrameworkCore;
@@ -1400,7 +1401,69 @@ namespace DebugModels.Controllers
             return RedirectToAction("UserTable");
         }
 
+        public IActionResult UserInfo(int userId)
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
 
+            var user = _context.Users
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .FirstOrDefault(u => u.Id == userId);
+
+            var instructor = _context.Instructors
+                .Include(i => i.Department)
+                .FirstOrDefault(i => i.UserId == userId);
+
+            var student = _context.Students
+                .Include(s => s.Department)
+                .FirstOrDefault(s => s.UserId == userId);
+
+            var model = new UserFullInfoViewModel
+            {
+                User = user!,
+                Instructor = instructor,
+                Student = student
+            };
+
+            return View(model); 
+
+        }
+
+
+        public IActionResult Dashboard()
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+            var viewModel = new AdminDashboardViewModel
+            {
+                DepartmentCount = _context.Departments.Count(),
+                UserCount = _context.Users.Count(),
+                InstructorCount = _context.Instructors.Count(),
+                StudentCount = _context.Students.Count(),
+                CourseCount = _context.Courses.Count(),
+                SectionCount = _context.Sections.Count()
+            };
+
+            return View(viewModel);
+        }
+
+        public IActionResult Logout()
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+            HttpContext.Session.Clear();
+            TempData["SuccessMessage"] = "Logout successfully.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
     }
 
 
