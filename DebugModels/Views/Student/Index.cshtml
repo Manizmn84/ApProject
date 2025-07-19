@@ -1,0 +1,5 @@
+﻿@model DebugModels.Models.Student
+
+<h2>Welcome, @Model.User?.first_name!</h2>
+<p>Department: @Model.Department?.Name</p>
+<p>Hire Date: @Model.enrollment_date.ToShortDateString()</p>
