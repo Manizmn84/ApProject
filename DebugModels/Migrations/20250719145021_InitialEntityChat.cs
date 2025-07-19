@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DebugModels.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialEntityChat : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -133,6 +133,35 @@ namespace DebugModels.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RoleMessages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Subject = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SenderId = table.Column<int>(type: "int", nullable: true),
+                    ReceiverId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoleMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RoleMessages_Users_ReceiverId",
+                        column: x => x.ReceiverId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RoleMessages_Users_SenderId",
+                        column: x => x.SenderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -329,6 +358,16 @@ namespace DebugModels.Migrations
                 column: "PreRegCourseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RoleMessages_ReceiverId",
+                table: "RoleMessages",
+                column: "ReceiverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RoleMessages_SenderId",
+                table: "RoleMessages",
+                column: "SenderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Sections_ClassRoomId",
                 table: "Sections",
                 column: "ClassRoomId");
@@ -386,6 +425,9 @@ namespace DebugModels.Migrations
         {
             migrationBuilder.DropTable(
                 name: "PreRegs");
+
+            migrationBuilder.DropTable(
+                name: "RoleMessages");
 
             migrationBuilder.DropTable(
                 name: "Takes");

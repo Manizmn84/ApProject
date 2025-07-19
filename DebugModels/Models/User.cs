@@ -25,6 +25,8 @@ namespace DebugModels.Models
         public List<Instructor>? Instructors { get; set; }
         
         public List<Student>? Students { get; set; }
+
+        public List<RoleMessage>? RoleMessages { get; set; }
         #endregion
     }
 }
