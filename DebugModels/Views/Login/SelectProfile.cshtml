@@ -5,43 +5,54 @@
     var userId = TempData["UserId"];
 }
 
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-body">
-            <h4 class="text-center mb-4">Select @role Profile</h4>
-
-            <form asp-action="SelectProfileConfirmed" method="post">
-                <input type="hidden" name="UserId" value="@userId" />
-                <input type="hidden" name="Role" value="@role" />
-
-                <div class="mb-3">
-                    <label class="form-label">@role List</label>
-                    <select name="ProfileId" class="form-select" required>
-                        <option value="">-- Select --</option>
-
-                        @if (role == "Instructor")
-                        {
-                            foreach (var item in Model)
-                            {
-                                <option value="@item.InstructorId">
-                                    Department: @item.Department?.Name - Hire Date: @item.hire_date.ToShortDateString()
-                                </option>
-                            }
-                        }
-                        else if (role == "Student")
-                        {
-                            foreach (var item in Model)
-                            {
-                                <option value="@item.StudentId">
-                                    Department: @item.Department?.Name - Enrolled: @item.enrollment_date.ToShortDateString()
-                                </option>
-                            }
-                        }
-                    </select>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-lines-fill me-2"></i> Select @role Profile
+                    </h4>
                 </div>
+                <div class="card-body p-4">
+                    <form asp-action="SelectProfileConfirmed" method="post" class="needs-validation" novalidate>
+                        <input type="hidden" name="UserId" value="@userId" />
+                        <input type="hidden" name="Role" value="@role" />
 
-                <button type="submit" class="btn btn-primary w-100">Continue</button>
-            </form>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">@role List</label>
+                            <select name="ProfileId" class="form-select" required>
+                                <option value="">-- Select --</option>
+
+                                @if (role == "Instructor")
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <option value="@item.InstructorId">
+                                            Department: @item.Department?.Name - Hire Date: @item.hire_date.ToShortDateString()
+                                        </option>
+                                    }
+                                }
+                                else if (role == "Student")
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <option value="@item.StudentId">
+                                            Department: @item.Department?.Name - Enrolled: @item.enrollment_date.ToShortDateString()
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg px-4 w-100 shadow-sm">
+                                <i class="bi bi-arrow-right-circle-fill me-1"></i> Continue
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

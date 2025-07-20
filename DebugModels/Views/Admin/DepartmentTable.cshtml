@@ -1,5 +1,7 @@
 ﻿@model List<DebugModels.Models.Department>
-
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
 <h2>Department List</h2>
 
 @if (TempData["SuccessMessage"] != null)
@@ -12,7 +14,7 @@
 }
 
 <table class="table table-bordered">
-    <thead>
+    <thead class="table-dark">
         <tr>
             <th>Name</th>
             <th>Building</th>

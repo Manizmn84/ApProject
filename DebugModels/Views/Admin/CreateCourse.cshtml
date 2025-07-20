@@ -1,47 +1,67 @@
 ﻿@model DebugModels.Models.Course
 
-<h2>Add New Course</h2>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Add New Course";
+}
 
-<form asp-action="CreateCourse" method="post" id="createCourseForm">
-    <div class="mb-3">
-        <label asp-for="Title"></label>
-        <input asp-for="Title" class="form-control" />
-        <span asp-validation-for="Title" class="text-danger"></span>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-journal-plus"></i> Add New Course</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateCourse" method="post" id="createCourseForm" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-semibold">Course Title</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-journal-text"></i></span>
+                                <input asp-for="Title" class="form-control" placeholder="Enter course title" required />
+                            </div>
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Unit" class="form-label fw-semibold">Course Unit</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-123"></i></span>
+                                <input asp-for="Unit" class="form-control" placeholder="e.g., 3" required />
+                            </div>
+                            <span asp-validation-for="Unit" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="DepartmentId" class="form-label fw-semibold">Select Department</label>
+                            <select id="DepartmentId" name="DepartmentId" class="form-select" required>
+                                <option value="">-- Select Department --</option>
+                                @foreach (var dept in ViewBag.Departments as List<DebugModels.Models.Department>)
+                                {
+                                    <option value="@dept.Id">@dept.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="PreReqCourseIds" class="form-label fw-semibold">Select Prerequisite Courses</label>
+                            <select id="PreReqCourseIds" name="PreReqCourseIds" class="form-select" multiple size="5">
+                                <!-- Will be filled by JS -->
+                            </select>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success px-4 btn-lg shadow-sm">
+                                <i class="bi bi-plus-circle-fill"></i> Add Course
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div>
-        <label asp-for="Unit"></label>
-        <input asp-for="Unit" class="form-control" />
-        <span asp-validation-for="Unit" class="text-danger"></span>
-    </div>
-
-
-    <!-- انتخاب دانشکده -->
-    <!-- انتخاب دانشکده -->
-    <div class="mb-3">
-        <label for="DepartmentId">Select Department</label>
-        <select id="DepartmentId" name="DepartmentId" class="form-select" required>
-            <option value="">-- Select Department --</option>
-            @foreach (var dept in ViewBag.Departments as List<DebugModels.Models.Department>)
-            {
-                <option value="@dept.Id">@dept.Name</option>
-            }
-        </select>
-        <span asp-validation-for="DepartmentId" class="text-danger"></span> <!-- 👈 این خط مهمه -->
-    </div>
-
-
-    <!-- دروس پیش نیاز (چند انتخابی) -->
-    <div class="mb-3">
-        <label for="PreReqCourseIds">Select Prerequisite Courses</label>
-        <select id="PreReqCourseIds" name="PreReqCourseIds" class="form-select" multiple size="5">
-            <!-- اینجا با جاوااسکریپت پر میشه -->
-        </select>
-    </div>
-
-    <br />
-    <button type="submit" class="btn btn-success">Add Course</button>
-</form>
+</div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -71,3 +91,4 @@
 
     <partial name="_ValidationScriptsPartial" />
 }
+
