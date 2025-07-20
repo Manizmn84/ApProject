@@ -1,0 +1,58 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Transcript";
+    var studentName = ViewBag.StudentName as string;
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Transcript</h2>
+
+    <div class="mb-3">
+        <strong>Student:</strong> @studentName
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">No transcript data available.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Course Title</th>
+                    <th>Semester</th>
+                    <th>Year</th>
+                    <th>Instructor</th>
+                    <th>Grade</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.CourseTitle</td>
+                        <td>@item.Semester</td>
+                        <td>@item.Year</td>
+                        <td>@item.InstructorName</td>
+                        <td>@item.Grade</td>
+                        <td>
+                            @if (item.Status == "Passed")
+                            {
+                                <span class="badge bg-success">@item.Status</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@item.Status</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+</div>
+

@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Assign Grade";
+    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+}
+
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-body">
+            <h3 class="card-title text-center mb-4">Assign Grade</h3>
+
+            <div class="mb-3">
+                <strong>Student:</strong> @ViewBag.firstName @ViewBag.lastName <br />
+                <strong>Course:</strong> @ViewBag.courseName <br />
+                <strong>Department:</strong> @ViewBag.DepartmentName
+            </div>
+
+            <form asp-action="AssignGrade" method="post">
+                <input type="hidden" name="takeId" value="@ViewBag.Id" />
+
+                <div class="mb-3">
+                    <label for="grade" class="form-label">Grade (0 - 20):</label>
+                    <input type="number" name="grade" class="form-control rounded-3 shadow-sm"
+                           min="0" max="20" step="1" required />
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary rounded-3">Submit Grade</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

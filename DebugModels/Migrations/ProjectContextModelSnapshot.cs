@@ -43,7 +43,7 @@ namespace DebugModels.Migrations
 
                     b.HasKey("ClassRoomId");
 
-                    b.ToTable("ClassRooms");
+                    b.ToTable("ClassRooms", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Course", b =>
@@ -71,7 +71,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Department", b =>
@@ -96,7 +96,7 @@ namespace DebugModels.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Instructor", b =>
@@ -125,7 +125,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Instructors");
+                    b.ToTable("Instructors", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.PreRegs", b =>
@@ -148,7 +148,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("PreRegCourseId");
 
-                    b.ToTable("PreRegs");
+                    b.ToTable("PreRegs", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Role", b =>
@@ -166,7 +166,7 @@ namespace DebugModels.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Sections", b =>
@@ -220,7 +220,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("TimeSlotId");
 
-                    b.ToTable("Sections");
+                    b.ToTable("Sections", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Student", b =>
@@ -246,7 +246,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Takes", b =>
@@ -272,7 +272,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("Takes");
+                    b.ToTable("Takes", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Teaches", b =>
@@ -290,7 +290,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("InstructorId");
 
-                    b.ToTable("Teaches");
+                    b.ToTable("Teaches", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.TimeSlot", b =>
@@ -314,7 +314,7 @@ namespace DebugModels.Migrations
 
                     b.HasKey("TimeSlotId");
 
-                    b.ToTable("TimeSlots");
+                    b.ToTable("TimeSlots", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.User", b =>
@@ -349,7 +349,7 @@ namespace DebugModels.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.UserRole", b =>
@@ -364,7 +364,7 @@ namespace DebugModels.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("DebugModels.Models.Course", b =>

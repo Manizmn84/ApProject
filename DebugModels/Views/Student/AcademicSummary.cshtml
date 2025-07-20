@@ -1,0 +1,51 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Academic Summary";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Academic Summary</h2>
+
+    @foreach (var term in Model)
+    {
+        <div class="card mb-4 shadow border-dark">
+            <div class="card-header text-white" style="background-color: #000;">
+                <strong>Year:</strong> @term.Year |
+                <strong>Semester:</strong> @term.Semester
+                <span class="float-end"><strong>GPA:</strong> @term.GPA.ToString("0.00")</span>
+            </div>
+            <div class="card-body bg-white">
+                <table class="table table-bordered table-striped table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course Title</th>
+                            <th>Course Units</th>
+                            <th>Grade</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in term.Courses)
+                        {
+                            <tr>
+                                <td>@item.Sections.Course?.Title</td>
+                                <td>@item.Sections.Course?.Unit</td>
+                                <td>@item.grade</td>
+                                <td>
+                                    @if (item.grade >= 10)
+                                    {
+                                        <span class="badge bg-success">Passed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -39,5 +39,53 @@ namespace DebugModels.Services.Instructor
 
             return OperationResult.Ok("Instructor deleted successfully.");
         }
+
+        public async Task<OperationResult> RemoveStudent(int? takeId)
+        {
+            var takes = _context.Takes
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Course)
+                .Include(t => t.Student)
+                .FirstOrDefault(t => t.TakesId == takeId);
+
+            if (takes == null)
+            {
+                return OperationResult.Fail("Student assignment not found.");
+            }
+
+            var studentId = takes.StudentId;
+            var courseId = takes.Sections?.Course?.CourseId;
+
+            if (courseId == null)
+            {
+                return OperationResult.Fail("Course information is missing.");
+            }
+
+
+            var dependentCourseIds = _context.PreRegs
+                .Where(p => p.PreRegCourseId == courseId)
+                .Select(p => p.CoureId)
+                .ToList();
+
+            if (dependentCourseIds.Any())
+            {
+                var studentCurrentCourses = _context.Takes
+                    .Where(t => t.StudentId == studentId)
+                    .Select(t => t.Sections.CourseId)
+                    .ToList();
+
+                var blockingCourses = dependentCourseIds.Intersect(studentCurrentCourses).ToList();
+                if (blockingCourses.Any())
+                {
+                    return OperationResult.Fail("Cannot unassign this student. This course is a prerequisite for another course the student is currently taking.");
+                }
+            }
+
+
+            _context.Takes.Remove(takes);
+            _context.SaveChanges();
+
+            return OperationResult.Ok("Student unassigned from section successfully.");
+        }
     }
 }
