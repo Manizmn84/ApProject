@@ -1,13 +1,14 @@
 ﻿using DebugModels.Data;
-using DebugModels.Models.ViewModels;
-using Microsoft.AspNetCore.Mvc;
 using DebugModels.Models;
-using Microsoft.EntityFrameworkCore;
+using DebugModels.Models.ViewModels;
 using DebugModels.Services.Course;
 using DebugModels.Services.Department;
 using DebugModels.Services.Instructor;
 using DebugModels.Services.Student;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using YourProjectNamespace.Utilities;
+using static System.Collections.Specialized.BitVector32;
 
 namespace DebugModels.Controllers
 {
@@ -758,31 +759,72 @@ namespace DebugModels.Controllers
             return RedirectToAction("SectionTable");
         }
 
-
-        public IActionResult SectionTable()
+        
+        public IActionResult SelectDepartmentForSections()
         {
             if (!IsCan())
             {
-                TempData["ErrorMessage"] = "Access denied. Please login.";
+                TempData["ErrorMessage"] = "Access denied.";
                 return RedirectToAction("LoginUsers", "Login");
             }
-            var sections = _context.Sections
-                .Include(s => s.Course)
-                .ThenInclude(c => c.Department)
-                .Include(s => s.ClassRoom)
-                .Include(s => s.TimeSlot)
-                .Include(s => s.Teaches)
-                    .ThenInclude(t => t.Instructor)
-                        .ThenInclude(i => i.User)
-                .Include(s => s.Takes)
-                    .ThenInclude(t => t.Student)
-                        .ThenInclude(st => st.User)
-                .ToList();
 
-            return View(sections);
+            var model = new SelectDepartmentViewModel
+            {
+                Departments = _context.Departments.ToList()
+            };
+
+            return View(model);
         }
 
 
+        [HttpGet]
+        public IActionResult SectionTable(int? SelectedDepartmentId)
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+
+            // ذخیره یا بازیابی از Session
+            if (SelectedDepartmentId.HasValue)
+                HttpContext.Session.SetInt32("SelectedDepartmentId", SelectedDepartmentId.Value);
+
+            int? departmentId = SelectedDepartmentId ?? HttpContext.Session.GetInt32("SelectedDepartmentId");
+
+            if (departmentId == null)
+            {
+                TempData["ErrorMessage"] = "Please select a department first.";
+                return RedirectToAction("SelectDepartmentForSections");
+            }
+
+            var sections = _context.Sections
+                .Include(s => s.Course).ThenInclude(c => c.Department)
+                .Include(s => s.ClassRoom)
+                .Include(s => s.TimeSlot)
+                .Include(s => s.Teaches).ThenInclude(t => t.Instructor).ThenInclude(i => i.User)
+                .Include(s => s.Takes).ThenInclude(t => t.Student).ThenInclude(st => st.User)
+                .Where(s =>
+                    s.Course != null &&
+                    s.Course.Department != null &&
+                    s.Course.DepartmentId == departmentId
+                )
+                .ToList();
+
+            var grouped = sections
+               .GroupBy(s => (s.year, s.Semester))
+               .OrderBy(g => g.Key.year)
+               .ThenBy(g => g.Key.Semester)
+               .ToList();
+
+            ViewBag.DepartmentName = _context.Departments.FirstOrDefault(d => d.Id == departmentId)?.Name;
+
+            return View("SectionTable", grouped);
+        }
+
+
+
+        
         [HttpPost]
         public IActionResult DeleteSection(int sectionId)
         {
@@ -823,6 +865,7 @@ namespace DebugModels.Controllers
             {
                 _context.TimeSlots.Remove(section.TimeSlot);
             }
+
 
             
             _context.Sections.Remove(section);
