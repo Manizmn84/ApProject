@@ -81,10 +81,14 @@
 
     <div class="container mt-4">
         <main role="main" class="pb-3">
-            @if (TempData["SuccessMessage"] != null)
+            @if (TempData["SuccessMessage"] != null && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard")
             {
-                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             }
+
             @RenderBody()
         </main>
     </div>
