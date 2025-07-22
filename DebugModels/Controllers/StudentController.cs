@@ -380,18 +380,21 @@ public class StudentController : Controller
 
         if (string.IsNullOrEmpty(withEmail))
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "email is Null. Please login.";
+            return RedirectToAction("MessageList");
         }
 
         var user = await _context.Users.FindAsync(userId);
         var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
         if (user == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "user is Null. Please login.";
+            return RedirectToAction("MessageList");
         }
         if (otherUser == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "otherUser is Null. Please login.";
+            return RedirectToAction("MessageList");
         }
 
         var messages = await _context.RoleMessages
@@ -482,7 +485,7 @@ public class StudentController : Controller
         if (section == null)
         {
             TempData["ErrorMessage"] = "don`t find Section";
-            return View("Index");
+            return RedirectToAction("Appeal");
         }
 
         int? instructorUserId = null;
@@ -494,7 +497,7 @@ public class StudentController : Controller
         else
         {
             TempData["ErrorMessage"] = "Instructor information is not available.";
-            return View("Index");
+            return RedirectToAction("Appeal");
         }
 
         var studentUserId = student.UserId;
@@ -502,7 +505,7 @@ public class StudentController : Controller
         if (studentUserId == null)
         {
             TempData["ErrorMessage"] = "Student User ID is not available.";
-            return View("Index");
+            return RedirectToAction("Appeal");
         }
 
         var result = await _ChateService.SendMessage(new RoleMessage
@@ -598,18 +601,21 @@ public class StudentController : Controller
 
         if (string.IsNullOrEmpty(withEmail))
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "email is null";
+            return RedirectToAction("Appeal");
         }
 
         var user = await _context.Users.FindAsync(userId);
         var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
         if (user == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "user is Null";
+            return RedirectToAction("Appeal");
         }
         if (otherUser == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "otherUser is Null";
+            return RedirectToAction("Appeal");
         }
 
         var messages = await _context.RoleMessages

@@ -451,18 +451,21 @@ public class InstructorController : Controller
 
         if (string.IsNullOrEmpty(withEmail))
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "email is Null";
+            return RedirectToAction("MessageList");
         }
 
         var user = await _context.Users.FindAsync(userId);
         var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
         if (user == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "User is Null";
+            return RedirectToAction("MessageList");
         }
         if (otherUser == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "other User is Null";
+            return RedirectToAction("MessageList");
         }
 
         var messages = await _context.RoleMessages
@@ -571,18 +574,21 @@ public class InstructorController : Controller
 
         if (string.IsNullOrEmpty(withEmail))
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "email is Null";
+            return RedirectToAction("AppealList");
         }
 
         var user = await _context.Users.FindAsync(userId);
         var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
         if (user == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "User is Null";
+            return RedirectToAction("AppealList");
         }
         if (otherUser == null)
         {
-            return RedirectToAction("Index");
+            TempData["ErrorMessage"] = "Other is Null";
+            return RedirectToAction("AppealList");
         }
 
         var messages = await _context.RoleMessages
