@@ -1,40 +1,69 @@
 ﻿@model DebugModels.Models.Department
 
 @{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Create Department";
 }
 
-<h2>Create New Department</h2>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-building-add"></i> Create New Department</h3>
+                </div>
+                <div class="card-body p-4">
 
-@if (ViewData["ExistDepartment"] != null)
-{
-    <div class="alert alert-danger">
-        @ViewData["ExistDepartment"]
+                    @if (ViewData["ExistDepartment"] != null)
+                    {
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <span>@ViewData["ExistDepartment"]</span>
+                        </div>
+                    }
+
+                    <form asp-action="CreateDepartment" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold">Department Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                <input asp-for="Name" class="form-control" placeholder="e.g., Computer Science" required />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Building" class="form-label fw-semibold">Building</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-house-door"></i></span>
+                                <input asp-for="Building" class="form-control" placeholder="e.g., Engineering Block B" required />
+                            </div>
+                            <span asp-validation-for="Building" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Budget" class="form-label fw-semibold">Budget</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <input asp-for="Budget" class="form-control" placeholder="e.g., 1000000" required />
+                            </div>
+                            <span asp-validation-for="Budget" class="text-danger small"></span>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success px-5 btn-lg shadow-sm">
+                                <i class="bi bi-check-circle-fill"></i> Create
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
     </div>
-}
-
-<form asp-action="CreateDepartment" method="post">
-    <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Building" class="form-label"></label>
-        <input asp-for="Building" class="form-control" />
-        <span asp-validation-for="Building" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Budget" class="form-label"></label>
-        <input asp-for="Budget" class="form-control" />
-        <span asp-validation-for="Budget" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+

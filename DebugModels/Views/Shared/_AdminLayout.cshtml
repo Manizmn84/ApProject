@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        .navbar-custom {
+            background-color: #343a40;
+        }
+
+            .navbar-custom .navbar-brand,
+            .navbar-custom .nav-link {
+                color: #f8f9fa;
+            }
+
+                .navbar-custom .nav-link:hover {
+                    color: #ffc107;
+                }
+
+        .footer-custom {
+            background-color: #343a40;
+            color: #f8f9fa;
+            padding: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Dashboard">
+                    <i class="bi bi-shield-lock-fill"></i> Admin Panel
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin"
+                        aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon bg-light"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarAdmin">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" asp-action="CreateUser">Create User</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="CreateDepartment">Create Department</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="CreateCourse">Create Course</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="CreateSection">Create Section</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="UserTable">User Table</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="CourseTable">Course Table</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="SelectDepartmentForSections">Section Table</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-action="DepartmentTable">Department Table</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" asp-controller="Admin" asp-action="Logout">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-4">
+        <main role="main" class="pb-3">
+            @if (TempData["SuccessMessage"] != null && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard")
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer-custom mt-5">
+        &copy; 1404 - Admin Panel
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+

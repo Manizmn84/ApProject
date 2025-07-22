@@ -1,13 +1,17 @@
 ﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var user = ViewBag.User as DebugModels.Models.User;
     var departments = ViewBag.Departments as List<DebugModels.Models.Department>;
 }
 
 <div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
+    <div class="card shadow rounded">
+        <div class="card-header bg-primary text-white">
             <h3>Create Instructor Profile</h3>
-            <p class="mb-0">User: @user.first_name @user.last_name (@user.email)</p>
+            <p class="mb-0">
+                <strong>User:</strong> @user?.first_name @user?.last_name
+                (<a href="mailto:@user?.email" class="text-white">@user?.email</a>)
+            </p>
         </div>
         <div class="card-body">
             <form method="post" action="@Url.Action("CreateInstructor")">
@@ -15,31 +19,31 @@
 
                 <!-- Salary -->
                 <div class="mb-3">
-                    <label for="salary" class="form-label">Salary</label>
+                    <label for="salary" class="form-label">💰 Salary</label>
                     <input type="number"
                            step="0.01"
                            class="form-control"
                            id="salary"
                            name="Salary"
                            placeholder="Enter salary amount"
-                           required>
+                           required />
                     <div class="form-text">Enter salary in decimal format (e.g., 50000.00)</div>
                 </div>
 
                 <!-- Hire Date -->
                 <div class="mb-3">
-                    <label for="hire_date" class="form-label">Hire Date</label>
+                    <label for="hire_date" class="form-label">📅 Hire Date</label>
                     <input type="date"
                            class="form-control"
                            id="hire_date"
                            name="hire_date"
                            value="@DateTime.Now.ToString("yyyy-MM-dd")"
-                           required>
+                           required />
                 </div>
 
                 <!-- Select Department -->
                 <div class="mb-3">
-                    <label for="DepartmentId" class="form-label">Select Department</label>
+                    <label for="DepartmentId" class="form-label">🏢 Select Department</label>
                     <select class="form-select" id="DepartmentId" name="DepartmentId" required>
                         <option value="">-- Choose a department --</option>
                         @foreach (var dept in departments)
@@ -50,9 +54,9 @@
                 </div>
 
                 <!-- Submit Buttons -->
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <a href="@Url.Action("UserTable")" class="btn btn-secondary me-md-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Create Instructor</button>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="@Url.Action("UserTable", "Admin")" class="btn btn-outline-secondary">⬅ Cancel</a>
+                    <button type="submit" class="btn btn-primary">✅ Create Instructor</button>
                 </div>
             </form>
         </div>

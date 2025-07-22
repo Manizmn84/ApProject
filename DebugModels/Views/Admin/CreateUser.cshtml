@@ -1,40 +1,69 @@
 ﻿@model DebugModels.Models.User
 
 @{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Create User";
 }
 
-<h2>Create New User</h2>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-person-plus-fill"></i> Create New User</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateUser" method="post" class="needs-validation" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="first_name" class="form-label fw-semibold">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input asp-for="first_name" class="form-control" placeholder="Enter first name" required />
+                                </div>
+                                <span asp-validation-for="first_name" class="text-danger small"></span>
+                            </div>
 
-<form asp-action="CreateUser" method="post">
-    <div class="mb-3">
-        <label asp-for="first_name" class="form-label"></label>
-        <input asp-for="first_name" class="form-control" />
-        <span asp-validation-for="first_name" class="text-danger"></span>
+                            <div class="col-md-6">
+                                <label asp-for="last_name" class="form-label fw-semibold">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input asp-for="last_name" class="form-control" placeholder="Enter last name" required />
+                                </div>
+                                <span asp-validation-for="last_name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="email" class="form-label fw-semibold">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input asp-for="email" class="form-control" placeholder="example@domain.com" required />
+                                </div>
+                                <span asp-validation-for="email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="hashed_password" class="form-label fw-semibold">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                    <input asp-for="hashed_password" class="form-control" placeholder="Enter password" required />
+                                </div>
+                                <span asp-validation-for="hashed_password" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+                                <i class="bi bi-check2-circle"></i> Submit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="last_name" class="form-label"></label>
-        <input asp-for="last_name" class="form-control" />
-        <span asp-validation-for="last_name" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="email" class="form-label"></label>
-        <input asp-for="email" class="form-control" />
-        <span asp-validation-for="email" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="hashed_password" class="form-label"></label>
-        <input asp-for="hashed_password" class="form-control" />
-        <span asp-validation-for="hashed_password" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
-

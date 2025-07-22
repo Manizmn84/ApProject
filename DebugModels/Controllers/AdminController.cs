@@ -1,12 +1,14 @@
 ﻿using DebugModels.Data;
-using Microsoft.AspNetCore.Mvc;
 using DebugModels.Models;
-using Microsoft.EntityFrameworkCore;
+using DebugModels.Models.ViewModels;
 using DebugModels.Services.Course;
 using DebugModels.Services.Department;
 using DebugModels.Services.Instructor;
 using DebugModels.Services.Student;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using YourProjectNamespace.Utilities;
+using static System.Collections.Specialized.BitVector32;
 
 namespace DebugModels.Controllers
 {
@@ -757,31 +759,72 @@ namespace DebugModels.Controllers
             return RedirectToAction("SectionTable");
         }
 
-
-        public IActionResult SectionTable()
+        
+        public IActionResult SelectDepartmentForSections()
         {
             if (!IsCan())
             {
-                TempData["ErrorMessage"] = "Access denied. Please login.";
+                TempData["ErrorMessage"] = "Access denied.";
                 return RedirectToAction("LoginUsers", "Login");
             }
-            var sections = _context.Sections
-                .Include(s => s.Course)
-                .ThenInclude(c => c.Department)
-                .Include(s => s.ClassRoom)
-                .Include(s => s.TimeSlot)
-                .Include(s => s.Teaches)
-                    .ThenInclude(t => t.Instructor)
-                        .ThenInclude(i => i.User)
-                .Include(s => s.Takes)
-                    .ThenInclude(t => t.Student)
-                        .ThenInclude(st => st.User)
-                .ToList();
 
-            return View(sections);
+            var model = new SelectDepartmentViewModel
+            {
+                Departments = _context.Departments.ToList()
+            };
+
+            return View(model);
         }
 
 
+        [HttpGet]
+        public IActionResult SectionTable(int? SelectedDepartmentId)
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+
+            
+            if (SelectedDepartmentId.HasValue)
+                HttpContext.Session.SetInt32("SelectedDepartmentId", SelectedDepartmentId.Value);
+
+            int? departmentId = SelectedDepartmentId ?? HttpContext.Session.GetInt32("SelectedDepartmentId");
+
+            if (departmentId == null)
+            {
+                TempData["ErrorMessage"] = "Please select a department first.";
+                return RedirectToAction("SelectDepartmentForSections");
+            }
+
+            var sections = _context.Sections
+                .Include(s => s.Course).ThenInclude(c => c.Department)
+                .Include(s => s.ClassRoom)
+                .Include(s => s.TimeSlot)
+                .Include(s => s.Teaches).ThenInclude(t => t.Instructor).ThenInclude(i => i.User)
+                .Include(s => s.Takes).ThenInclude(t => t.Student).ThenInclude(st => st.User)
+                .Where(s =>
+                    s.Course != null &&
+                    s.Course.Department != null &&
+                    s.Course.DepartmentId == departmentId
+                )
+                .ToList();
+
+            var grouped = sections
+               .GroupBy(s => (s.year, s.Semester))
+               .OrderBy(g => g.Key.year)
+               .ThenBy(g => g.Key.Semester)
+               .ToList();
+
+            ViewBag.DepartmentName = _context.Departments.FirstOrDefault(d => d.Id == departmentId)?.Name;
+
+            return View("SectionTable", grouped);
+        }
+
+
+
+        
         [HttpPost]
         public IActionResult DeleteSection(int sectionId)
         {
@@ -822,6 +865,7 @@ namespace DebugModels.Controllers
             {
                 _context.TimeSlots.Remove(section.TimeSlot);
             }
+
 
             
             _context.Sections.Remove(section);
@@ -1400,7 +1444,69 @@ namespace DebugModels.Controllers
             return RedirectToAction("UserTable");
         }
 
+        public IActionResult UserInfo(int userId)
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
 
+            var user = _context.Users
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .FirstOrDefault(u => u.Id == userId);
+
+            var instructor = _context.Instructors
+                .Include(i => i.Department)
+                .FirstOrDefault(i => i.UserId == userId);
+
+            var student = _context.Students
+                .Include(s => s.Department)
+                .FirstOrDefault(s => s.UserId == userId);
+
+            var model = new UserFullInfoViewModel
+            {
+                User = user!,
+                Instructor = instructor,
+                Student = student
+            };
+
+            return View(model); 
+
+        }
+
+
+        public IActionResult Dashboard()
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+            var viewModel = new AdminDashboardViewModel
+            {
+                DepartmentCount = _context.Departments.Count(),
+                UserCount = _context.Users.Count(),
+                InstructorCount = _context.Instructors.Count(),
+                StudentCount = _context.Students.Count(),
+                CourseCount = _context.Courses.Count(),
+                SectionCount = _context.Sections.Count()
+            };
+
+            return View(viewModel);
+        }
+
+        public IActionResult Logout()
+        {
+            if (!IsCan())
+            {
+                TempData["ErrorMessage"] = "Access denied. Please login.";
+                return RedirectToAction("LoginUsers", "Login");
+            }
+            HttpContext.Session.Clear();
+            TempData["SuccessMessage"] = "Logout successfully.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
     }
 
 

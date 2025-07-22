@@ -1,43 +1,79 @@
 ﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.Title = "Assign Student to Section";
     var sec = ViewBag.Section as DebugModels.Models.Sections;
     var students = ViewBag.Students as List<DebugModels.Models.Student>;
 }
 
-<h2>Assign Student to Section</h2>
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title text-center mb-4">
+                <i class="bi bi-person-check-fill text-success"></i> Assign Student to Section
+            </h3>
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-}
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
-
-<div class="card p-3 mt-3 shadow-sm">
-    <h4>Class Info</h4>
-    <ul>
-        <li><strong>Course:</strong> @sec?.Course?.Title</li>
-        <li><strong>Department:</strong> @sec?.Course?.Department?.Name</li>
-        <li><strong>Room:</strong> @sec?.ClassRoom?.RoomNumber (@sec?.ClassRoom?.buliding)</li>
-        <li><strong>Time:</strong> @sec?.TimeSlot?.Day | @sec?.TimeSlot?.StartTime.ToString("HH:mm") - @sec?.TimeSlot?.EndTime.ToString("HH:mm")</li>
-    </ul>
-
-    <form asp-action="AssignStudent" method="post">
-        <input type="hidden" name="sectionId" value="@sec?.SectionsId" />
-        <label><strong>Select Student:</strong></label>
-        <select name="studentId" class="form-control mb-2" required>
-            <option value="">-- Choose Student --</option>
-            @foreach (var student in students)
+            @if (TempData["ErrorMessage"] != null)
             {
-                <option value="@student.StudentId">@student.User?.first_name @student.User?.last_name (ID: @student.StudentId)</option>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             }
-        </select>
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success">✅ Assign</button>
-            <a href="@Url.Action("SectionTable", "Admin")" class="btn btn-secondary">⬅ Back</a>
+            @if (sec != null)
+            {
+                <div class="mb-4">
+                    <h5>📘 Class Info</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Course:</strong> @sec.Course?.Title</li>
+                        <li class="list-group-item"><strong>Department:</strong> @sec.Course?.Department?.Name</li>
+                        <li class="list-group-item">
+                            <strong>Room:</strong> @sec.ClassRoom?.RoomNumber (@sec.ClassRoom?.buliding)
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Time:</strong> @sec.TimeSlot?.Day |
+                            @sec.TimeSlot?.StartTime.ToString("HH:mm") - @sec.TimeSlot?.EndTime.ToString("HH:mm")
+                        </li>
+                    </ul>
+                </div>
+
+                <form asp-action="AssignStudent" method="post">
+                    <input type="hidden" name="sectionId" value="@sec.SectionsId" />
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Select Student</strong></label>
+                        <select name="studentId" class="form-select" required>
+                            <option value="">-- Choose Student --</option>
+                            @foreach (var student in students)
+                            {
+                                <option value="@student.StudentId">
+                                    @student.User?.first_name @student.User?.last_name (ID: @student.StudentId)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle-fill"></i> Assign
+                        </button>
+                        <a href="@Url.Action("SectionTable", "Admin")" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left-circle-fill"></i> Back
+                        </a>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-danger mt-3">Section not found.</div>
+            }
         </div>
-    </form>
+    </div>
 </div>

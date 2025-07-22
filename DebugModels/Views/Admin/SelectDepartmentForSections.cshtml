@@ -1,0 +1,38 @@
+﻿@model DebugModels.Models.ViewModels.SelectDepartmentViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Select Department";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-search"></i> Select Department</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="SectionTable" method="get" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="SelectedDepartmentId" class="form-label fw-semibold">Department</label>
+                            <select asp-for="SelectedDepartmentId"
+                                    asp-items="@(new SelectList(Model.Departments, "Id", "Name"))"
+                                    class="form-select"
+                                    required>
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm">
+                                <i class="bi bi-eye-fill"></i> View Sections
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

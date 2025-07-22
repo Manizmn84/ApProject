@@ -1,0 +1,59 @@
+﻿@model DebugModels.Models.ViewModels.UserFullInfoViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "User Details";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">👤 User Details</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>👨‍💼 Name:</strong> @Model.User.first_name @Model.User.last_name</p>
+            <p><strong>📧 Email:</strong> @Model.User.email</p>
+            <p>
+                <strong>🔐 Roles:</strong>
+                @foreach (var role in Model.User.UserRoles!)
+                {
+                    <span class="badge bg-secondary me-1">@role.Role?.name</span>
+                }
+            </p>
+        </div>
+    </div>
+
+    @if (Model.Instructor != null)
+    {
+        <div class="card mt-4 border-primary shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📘 Instructor Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>🏢 Department:</strong> @Model.Instructor.Department?.Name</p>
+                <p><strong>📅 Hire Date:</strong> @Model.Instructor.hire_date.ToShortDateString()</p>
+            </div>
+        </div>
+    }
+
+    @if (Model.Student != null)
+    {
+        <div class="card mt-4 border-success shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">🎓 Student Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>🏢 Department:</strong> @Model.Student.Department?.Name</p>
+                <p><strong>📅 Enrollment Date:</strong> @Model.Student.enrollment_date.ToShortDateString()</p>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a href="@Url.Action("UserTable", "Admin")" class="btn btn-outline-secondary">
+            ⬅️ Back to User Table
+        </a>
+    </div>
+</div>
+
+

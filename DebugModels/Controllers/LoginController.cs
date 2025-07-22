@@ -48,7 +48,7 @@ namespace DebugModels.Controllers
                     {
                         HttpContext.Session.SetString("Role", "Admin");
                         HttpContext.Session.SetString("Password", "rootIust402");
-                        return RedirectToAction("UserTable","Admin");
+                        return RedirectToAction("Dashboard","Admin");
                     }
                     else
                     {

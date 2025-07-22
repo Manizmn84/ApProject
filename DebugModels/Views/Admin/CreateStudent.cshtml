@@ -1,17 +1,18 @@
 ﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var user = ViewBag.User as User;
     var departments = ViewBag.Departments as List<Department>;
 }
 
 <div class="container mt-5">
-    <div class="card shadow rounded">
+    <div class="card shadow-lg rounded">
         <div class="card-header bg-success text-white">
             <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Create Student Profile</h4>
-                <small class="text-end">
-                    <strong>User:</strong> @user.first_name @user.last_name<br />
-                    <strong>Email:</strong> <span class="text-light">@user.email</span>
-                </small>
+                <h4 class="mb-0">🎓 Create Student Profile</h4>
+                <div class="text-end">
+                    <div><strong>👤 Name:</strong> @user?.first_name @user?.last_name</div>
+                    <div><strong>📧 Email:</strong> <span class="text-light">@user?.email</span></div>
+                </div>
             </div>
         </div>
 
@@ -21,20 +22,20 @@
 
                 <!-- Enrollment Date -->
                 <div class="mb-3">
-                    <label for="enrollment_date" class="form-label">Enrollment Date</label>
+                    <label for="enrollment_date" class="form-label">📅 Enrollment Date</label>
                     <input type="date"
                            class="form-control"
                            id="enrollment_date"
                            name="enrollment_date"
                            value="@DateTime.Now.ToString("yyyy-MM-dd")"
-                           required>
+                           required />
                 </div>
 
                 <!-- Department Selection -->
                 <div class="mb-3">
-                    <label for="departmentId" class="form-label">Select Department</label>
+                    <label for="departmentId" class="form-label">🏢 Select Department</label>
                     <select class="form-select" name="departmentId" id="departmentId" required>
-                        <option value="">-- Select Department --</option>
+                        <option value="">-- Choose Department --</option>
                         @foreach (var dept in departments)
                         {
                             <option value="@dept.Id">@dept.Name</option>
@@ -43,9 +44,9 @@
                 </div>
 
                 <!-- Submit buttons -->
-                <div class="mt-4 d-flex justify-content-end">
-                    <a href="@Url.Action("UserTable")" class="btn btn-outline-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-success">Create Student</button>
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a href="@Url.Action("UserTable", "Admin")" class="btn btn-outline-secondary">⬅ Cancel</a>
+                    <button type="submit" class="btn btn-success">✅ Create Student</button>
                 </div>
             </form>
         </div>

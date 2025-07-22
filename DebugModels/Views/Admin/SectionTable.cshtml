@@ -1,156 +1,147 @@
-﻿@model List<DebugModels.Models.Sections>
+﻿@model List<IGrouping<(int year, int Semester), DebugModels.Models.Sections>>
 
 @{
-    ViewBag.Title = "Sections Table";
-
-    var groupedSections = Model
-        .Where(s => s.Course != null && s.ClassRoom != null && s.TimeSlot != null)
-        .GroupBy(s => new
-        {
-            s.Course.CourseId,
-            s.ClassRoomId,
-            s.TimeSlot.StartTime,
-            s.TimeSlot.EndTime,
-            s.Semester,
-            s.year,
-            s.Course.Department?.Name,
-            InstructorId = s.Teaches?.Instructor?.InstructorId
-        })
-        .Select(g => new
-        {
-            Representative = g.First(),
-            Days = g.Select(s => s.TimeSlot.Day).Distinct().ToList()
-        })
-        .ToList();
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Grouped Sections";
 }
 
-<h2 class="mt-3 mb-3">📚 Sections Table</h2>
+<h2 class="mt-3 mb-4">📚 Sections - @ViewBag.DepartmentName Department</h2>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
+
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Course</th>
-            <th>Code</th>
-            <th>Description</th>
-            <th>Department</th>
-            <th>Room</th>
-            <th>Building</th>
-            <th>Capacity</th>
-            <th>Enrollment</th>
-            <th>Days</th>
-            <th>Time</th>
-            <th>Semester</th>
-            <th>Year</th>
-            <th>Final Exam</th>
-            <th>Instructor</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in groupedSections)
-        {
-            var sec = item.Representative;
-            var instructorUser = sec.Teaches?.Instructor?.User;
-            bool hasInstructor = instructorUser != null;
 
-            <tr>
-                <td>@sec.Course.Title</td>
-                <td>@sec.Code</td>
-                <td>@sec.Description</td>
-                <td>@sec.Course.Department?.Name</td>
-                <td>@sec.ClassRoom.RoomNumber</td>
-                <td>@sec.ClassRoom.buliding</td>
-                <td>@sec.ClassRoom.Capacity</td>
-                <td>@(sec.Takes?.Count() ?? 0) / @sec.ClassRoom.Capacity</td>
-                <td>@string.Join(", ", item.Days)</td>
-                <td>@sec.TimeSlot.StartTime.ToString("HH:mm") - @sec.TimeSlot.EndTime.ToString("HH:mm")</td>
-                <td>@sec.Semester</td>
-                <td>@sec.year</td>
-                <td>@sec.final_exam_date.ToString("yyyy-MM-dd")</td>
-                <td>
-                    @if (hasInstructor)
+@foreach (var group in Model)
+{
+    <div class="card mb-5 shadow-sm border-dark">
+        <div class="card-header bg-dark text-white">
+            <strong>Year:</strong> @group.Key.year | <strong>Semester:</strong> @group.Key.Semester
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Course</th>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Room</th>
+                        <th>Building</th>
+                        <th>Capacity</th>
+                        <th>Enrollment</th>
+                        <th>Days</th>
+                        <th>Time</th>
+                        <th>Final Exam</th>
+                        <th>Instructor</th>
+                        <th style="min-width: 160px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sec in group)
                     {
-                        <span class="text-success fw-bold">
-                            @($"{instructorUser.first_name} {instructorUser.last_name}")
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">Unassigned</span>
-                    }
-                </td>
-                <td style="min-width: 150px;">
-                    <div class="d-flex flex-column gap-1">
-                        <form asp-action="DeleteSection" method="post">
-                            <input type="hidden" name="sectionId" value="@sec.SectionsId" />
-                            <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Are you sure you want to delete this section?');">
-                                Delete
-                            </button>
-                        </form>
+                        var instructorUser = sec.Teaches?.Instructor?.User;
+                        var hasInstructor = instructorUser != null;
+                        var days = string.Join(", ",
+                        group.Where(g => g.TimeSlot?.StartTime == sec.TimeSlot?.StartTime &&
+                        g.TimeSlot?.EndTime == sec.TimeSlot?.EndTime)
+                        .Select(s => s.TimeSlot?.Day)
+                        .Distinct());
 
-                        @if (hasInstructor)
-                        {
-                            <form asp-action="UnassignInstructor" method="post">
-                                <input type="hidden" name="sectionId" value="@sec.SectionsId" />
-                                <button type="submit" class="btn btn-sm btn-warning"
-                                        onclick="return confirm('Unassign instructor from this class?');">
-                                    UnassignInstructor
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <a asp-action="AssignInstructor"
-                               asp-route-sectionId="@sec.SectionsId"
-                               class="btn btn-sm btn-primary">
-                                AssignInstructor
-                            </a>
-                        }
-
-                        <a asp-action="AssignStudent"
-                           asp-route-sectionId="@sec.SectionsId"
-                           class="btn btn-sm btn-success">
-                            Assign Student
-                        </a>
-
-                        @* Unassign Student Buttons (compact) *@
-                        @if (sec.Takes != null && sec.Takes.Any())
-                        {
-                            foreach (var take in sec.Takes)
-                            {
-                                var student = take.Student?.User;
-                                if (student != null)
+                        <tr>
+                            <td>@sec.Course?.Title</td>
+                            <td>@sec.Code</td>
+                            <td>@sec.Description</td>
+                            <td>@sec.ClassRoom?.RoomNumber</td>
+                            <td>@sec.ClassRoom?.buliding</td>
+                            <td>@sec.ClassRoom?.Capacity</td>
+                            <td>@(sec.Takes?.Count() ?? 0)/@sec.ClassRoom?.Capacity</td>
+                            <td>@days</td>
+                            <td>@sec.TimeSlot?.StartTime.ToString(@"hh\:mm") - @sec.TimeSlot?.EndTime.ToString(@"hh\:mm")</td>
+                            <td>@sec.final_exam_date.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @if (hasInstructor)
                                 {
-                                    <form asp-action="UnassignStudent" method="post" class="mt-1">
-                                        <input type="hidden" name="takesId" value="@take.TakesId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100"
-                                                title="Unassign @student.first_name @student.last_name"
-                                                onclick="return confirm('Unassign student @student.first_name @student.last_name?');">
-                                            🧑‍🎓 @student.last_name
+                                    <span class="text-success fw-bold">
+                                        @($"{instructorUser.first_name} {instructorUser.last_name}")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unassigned</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <form asp-action="DeleteSection" method="post">
+                                        <input type="hidden" name="sectionId" value="@sec.SectionsId" />
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this section?');">
+                                            🗑️ Delete
                                         </button>
                                     </form>
-                                }
-                            }
-                        }
-                    </div>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+
+                                    @if (hasInstructor)
+                                    {
+                                        <form asp-action="UnassignInstructor" method="post">
+                                            <input type="hidden" name="sectionId" value="@sec.SectionsId" />
+                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                Unassign Instructor
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="AssignInstructor" asp-route-sectionId="@sec.SectionsId"
+                                           class="btn btn-sm btn-primary">
+                                            Assign Instructor
+                                        </a>
+                                    }
+
+                                    <a asp-action="AssignStudent" asp-route-sectionId="@sec.SectionsId"
+                                       class="btn btn-sm btn-success">
+                                        Assign Student
+                                    </a>
+
+                                    @if (sec.Takes != null)
+                                    {
+                                        foreach (var take in sec.Takes)
+                                        {
+                                            var student = take.Student?.User;
+                                            if (student != null)
+                                            {
+                                                <form asp-action="UnassignStudent" method="post" class="mt-1">
+                                                    <input type="hidden" name="takesId" value="@take.TakesId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                                            title="Unassign @student.first_name @student.last_name"
+                                                            onclick="return confirm('Unassign @student.first_name @student.last_name?');">
+                                                        🧑‍🎓 @student.last_name
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 
 <div class="mt-4">
     <a class="btn btn-success" href="@Url.Action("CreateSection", "Admin")">➕ Create New Section</a>
 </div>
-
-
