@@ -1,0 +1,50 @@
+﻿@model DebugModels.Models.RoleMessage
+
+@{
+    ViewData["Title"] = "Send Message";
+    var receivers = ViewBag.Receivers as List<DebugModels.Models.User>;
+    var senderId = ViewBag.SenderId as int?;
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+
+
+<h2 class="text-primary mb-4">📨 Send a Message</h2>
+
+<form asp-action="SendMessage" method="post" class="shadow p-4 rounded bg-light">
+    <div class="mb-3">
+        <label class="form-label fw-bold">Subject</label>
+        <select asp-for="Subject" class="form-select" required>
+            <option value="">-- Select Subject --</option>
+            <option value="Chat">Chat</option>
+        </select>
+        <span asp-validation-for="Subject" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Receiver</label>
+        <select asp-for="ReceiverId" class="form-select" required>
+            <option value="">-- Select Receiver --</option>
+            @foreach (var user in receivers)
+            {
+                <option value="@user.Id">@user.first_name (@user.email)</option>
+            }
+        </select>
+        <span asp-validation-for="ReceiverId" class="text-danger"></span>
+    </div>
+
+    <input type="hidden" asp-for="SenderId" value="@senderId" />
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Content</label>
+        <textarea asp-for="Content" class="form-control" rows="5" maxlength="1000" required></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success px-4">Send</button>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

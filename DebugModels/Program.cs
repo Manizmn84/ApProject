@@ -1,4 +1,5 @@
 using DebugModels.Data;
+using DebugModels.Services.Chat;
 using DebugModels.Services.Course;
 using DebugModels.Services.Department;
 using DebugModels.Services.Instructor;
@@ -17,6 +18,7 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IInstructorService, InstructorService>();
 builder.Services.AddScoped<IStudentService , StudentService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddSession();
 

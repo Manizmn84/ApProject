@@ -20,6 +20,7 @@ namespace DebugModels.Data
         public DbSet<TimeSlot> TimeSlots { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<PreRegs> PreRegs { get; set; }
+        public DbSet<RoleMessage> RoleMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -125,6 +126,20 @@ namespace DebugModels.Data
                 .WithMany(s => s.Takes) 
                 .HasForeignKey(t => t.SectionId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<RoleMessage>()
+                .HasOne(rm => rm.Sender)
+                .WithMany(u => u.RoleMessages)
+                .HasForeignKey(rm => rm.SenderId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
+            modelBuilder.Entity<RoleMessage>()
+                .HasOne(rm => rm.Receiver)
+                .WithMany()
+                .HasForeignKey(rm => rm.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
         }
     }
 }

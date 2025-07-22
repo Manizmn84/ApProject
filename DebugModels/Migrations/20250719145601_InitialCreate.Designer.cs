@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DebugModels.Migrations
 {
     [DbContext(typeof(ProjectContext))]
-    [Migration("20250718102209_Initial")]
-    partial class Initial
+    [Migration("20250719145601_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -170,6 +170,42 @@ namespace DebugModels.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("DebugModels.Models.RoleMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("ReceiverId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("RoleMessages");
                 });
 
             modelBuilder.Entity("DebugModels.Models.Sections", b =>
@@ -414,6 +450,23 @@ namespace DebugModels.Migrations
                     b.Navigation("PreRegCourse");
                 });
 
+            modelBuilder.Entity("DebugModels.Models.RoleMessage", b =>
+                {
+                    b.HasOne("DebugModels.Models.User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DebugModels.Models.User", "Sender")
+                        .WithMany("RoleMessages")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("DebugModels.Models.Sections", b =>
                 {
                     b.HasOne("DebugModels.Models.ClassRoom", "ClassRoom")
@@ -562,6 +615,8 @@ namespace DebugModels.Migrations
             modelBuilder.Entity("DebugModels.Models.User", b =>
                 {
                     b.Navigation("Instructors");
+
+                    b.Navigation("RoleMessages");
 
                     b.Navigation("Students");
 

@@ -1,0 +1,47 @@
+﻿@model DebugModels.Models.ViewModels.AppealView
+
+@{
+    var sections = ViewBag.Sections as List<DebugModels.Models.Takes>;
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+<h2>Submit Appeal</h2>
+
+<form asp-action="Appeal" method="post">
+    <div class="form-group">
+        <label for="sectionId">Select Section</label>
+        <select asp-for="sectionId" class="form-control" required>
+            <option value="">-- Select a Section --</option>
+            @foreach (var take in sections)
+            {
+                var item = take.Sections;
+                <option value="@item.SectionsId">
+                    @item.Course.Title (Section ID: @item.SectionsId)
+                </option>
+            }
+        </select>
+        <span asp-validation-for="sectionId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Content"></label>
+        <textarea asp-for="Content" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Submit Appeal</button>
+</form>
