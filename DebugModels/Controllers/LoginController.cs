@@ -127,12 +127,10 @@ namespace DebugModels.Controllers
         [HttpPost]
         public IActionResult SelectProfileConfirmed(int UserId, string Role, int ProfileId)
         {
-            // ذخیره در Session
             HttpContext.Session.SetInt32("UserId", UserId);
             HttpContext.Session.SetString("Role", Role);
             HttpContext.Session.SetInt32("ProfileId", ProfileId);
 
-            // هدایت به کنترلر مناسب
             if (Role == "Instructor")
                 return RedirectToAction("Index", "Instructor");
             else if (Role == "Student")

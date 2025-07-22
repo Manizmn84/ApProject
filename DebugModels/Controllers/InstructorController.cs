@@ -1,6 +1,7 @@
 ﻿using DebugModels.Data;
 using DebugModels.Models;
 using DebugModels.Models.ViewModels;
+using DebugModels.Services.Chat;
 using DebugModels.Services.Instructor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +11,13 @@ public class InstructorController : Controller
 {
     private readonly ProjectContext _context;
     private readonly IInstructorService _InstructorService;
+    private readonly IChatService _ChateService;
 
-    public InstructorController(ProjectContext context , IInstructorService InstructorService)
+    public InstructorController(ProjectContext context , IInstructorService InstructorService, IChatService ChatService)
     {
         _context = context;
         _InstructorService = InstructorService;
+        _ChateService = ChatService;
     }
 
     public IActionResult Logout()
@@ -262,6 +265,18 @@ public class InstructorController : Controller
             return RedirectToAction("LoginUsers", "Login");
         }
 
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
         var takes = await _context.Takes.Include(t => t.Sections).FirstOrDefaultAsync(t => t.TakesId == takeId);
         if (takes == null)
         {
@@ -282,6 +297,318 @@ public class InstructorController : Controller
 
         TempData["SuccessMessage"] = "Grade assigned successfully.";
         return RedirectToAction("StudentsInSection", new { id = takes.Sections.SectionsId});
+    }
+
+
+    public async Task<IActionResult> SendMessage()
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var Users = await _context.Users.Where(u => u.Id != instructor.UserId).ToListAsync();
+        ViewBag.SenderId = instructor.UserId;
+        ViewBag.Receivers = Users;
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SendMessage(RoleMessage message)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(message);
+        }
+
+        var result = await _ChateService.SendMessage(message);
+
+        TempData["SuccessMessage"] = result.Message;
+
+        if (message.Subject == "Objection")
+        {
+            return RedirectToAction("AppealList");
+        }
+
+        return RedirectToAction("MessageList");
+    }
+
+    public async Task<IActionResult> MessageList()
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var userId = instructor.UserId;
+
+        var messages = await _context.RoleMessages
+            .Include(rm => rm.Sender)
+            .Include(rm => rm.Receiver)
+            .Where(m =>
+                m.Subject == "Chat" &&
+                (
+                    (m.SenderId == userId) ||
+                    (m.ReceiverId == userId) ||
+                    (m.SenderId == null && m.ReceiverId == userId) ||
+                    (m.ReceiverId == null && m.SenderId == userId)
+                )
+            )
+            .ToListAsync();
+
+
+
+        var chatUsersEmails = messages
+            .Select(m =>
+                m.SenderId == userId ? m.Receiver?.email : 
+                m.ReceiverId == userId ? m.Sender?.email :   
+                m.SenderId == null ? "root@gmail.com" :      
+                m.ReceiverId == null ? "root@gmail.com" :    
+                null
+            )
+            .Where(email => !string.IsNullOrEmpty(email))
+            .Distinct()
+            .ToList();
+
+
+        return View(chatUsersEmails);
+    }
+
+    public async Task<IActionResult> Chat(string withEmail)
+    {
+
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var userId = instructor.UserId;
+
+        if (string.IsNullOrEmpty(withEmail))
+        {
+            return RedirectToAction("Index");
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
+        if (user == null)
+        {
+            return RedirectToAction("Index");
+        }
+        if (otherUser == null)
+        {
+            return RedirectToAction("Index");
+        }
+
+        var messages = await _context.RoleMessages
+            .Include(m => m.Sender)
+            .Include(m => m.Receiver)
+            .Where(m =>
+                m.Subject == "Chat" &&
+                (
+                    (m.SenderId == userId && m.ReceiverId == otherUser.Id) ||
+                    (m.SenderId == otherUser.Id && m.ReceiverId == userId) ||
+                    (m.SenderId == null && m.ReceiverId == userId) ||
+                    (m.SenderId == userId && m.ReceiverId == null)
+                )
+            )
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+
+
+        ViewBag.WithUserEmail = withEmail;
+        ViewBag.CurrentUserEmail = user.email;
+
+        return View(messages);
+    }
+
+    public async Task<IActionResult> AppealList()
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var userId = instructor.UserId;
+
+        var messages = await _context.RoleMessages
+            .Include(rm => rm.Sender)
+            .Include(rm => rm.Receiver)
+            .Where(m =>
+                m.Subject == "Objection" &&
+                (
+                    (m.SenderId == userId) ||
+                    (m.ReceiverId == userId) ||
+                    (m.SenderId == null && m.ReceiverId == userId) ||
+                    (m.ReceiverId == null && m.SenderId == userId)
+                )
+            )
+            .ToListAsync();
+
+
+
+        var chatUsersEmails = messages
+            .Select(m =>
+                m.SenderId == userId ? m.Receiver?.email :
+                m.ReceiverId == userId ? m.Sender?.email :
+                m.SenderId == null ? "root@gmail.com" :
+                m.ReceiverId == null ? "root@gmail.com" :
+                null
+            )
+            .Where(email => !string.IsNullOrEmpty(email))
+            .Distinct()
+            .ToList();
+
+
+        return View(chatUsersEmails);
+    }
+
+    public async Task<IActionResult> Objection(string withEmail)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var userId = instructor.UserId;
+
+        if (string.IsNullOrEmpty(withEmail))
+        {
+            return RedirectToAction("Index");
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
+        if (user == null)
+        {
+            return RedirectToAction("Index");
+        }
+        if (otherUser == null)
+        {
+            return RedirectToAction("Index");
+        }
+
+        var messages = await _context.RoleMessages
+            .Include(m => m.Sender)
+            .Include(m => m.Receiver)
+            .Where(m =>
+                m.Subject == "Objection" &&
+                (
+                    (m.SenderId == userId && m.ReceiverId == otherUser.Id) ||
+                    (m.SenderId == otherUser.Id && m.ReceiverId == userId) ||
+                    (m.SenderId == null && m.ReceiverId == userId) ||
+                    (m.SenderId == userId && m.ReceiverId == null)
+                )
+            )
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+
+
+        ViewBag.WithUserEmail = withEmail;
+        ViewBag.CurrentUserEmail = user.email;
+
+        return View(messages);
     }
 
 }
