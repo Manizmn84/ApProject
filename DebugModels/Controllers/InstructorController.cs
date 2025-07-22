@@ -362,10 +362,6 @@ public class InstructorController : Controller
 
         TempData["SuccessMessage"] = result.Message;
 
-        if (message.Subject == "Objection")
-        {
-            return RedirectToAction("AppealList");
-        }
 
         return RedirectToAction("MessageList");
     }
@@ -611,4 +607,79 @@ public class InstructorController : Controller
         return View(messages);
     }
 
+
+    public async Task<IActionResult> SendObjection()
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructorId = instructor.InstructorId;
+
+        var Users = await _context.Takes
+            .Include(t => t.Student)
+                .ThenInclude(s => s.User)
+            .Include(t => t.Sections)
+                .ThenInclude(s => s.Teaches)
+            .Where(t => t.Sections.Teaches.InstructorId == instructorId)
+            .Select(t => t.Student.User)
+            .Distinct()
+            .ToListAsync();
+        ViewBag.SenderId = instructor.UserId;
+        ViewBag.Receivers = Users;
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SendObjection(RoleMessage message)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(message);
+        }
+
+        var result = await _ChateService.SendMessage(message);
+
+        TempData["SuccessMessage"] = result.Message;
+
+        return RedirectToAction("AppealList");
+    }
 }
