@@ -996,10 +996,14 @@ namespace DebugModels.Controllers
                 .Include(s => s.TimeSlot)
                 .Include(s => s.Teaches)
                     .ThenInclude(t => t.Instructor)
-                .Where(s => s.Teaches != null &&
-                            s.Teaches.Instructor != null &&
-                            s.Teaches.Instructor.UserId == userId &&
-                            s.TimeSlot != null)
+                .Where(s =>
+                    s.Teaches != null &&
+                    s.Teaches.Instructor != null &&
+                    s.Teaches.Instructor.UserId == userId &&
+                    s.TimeSlot != null &&
+                    s.year == section.year &&             
+                    s.Semester == section.Semester         
+                )
                 .Any(s =>
                     s.TimeSlot.Day == section.TimeSlot.Day &&
                     section.TimeSlot.StartTime.TimeOfDay < s.TimeSlot.EndTime.TimeOfDay &&
@@ -1008,15 +1012,21 @@ namespace DebugModels.Controllers
 
             if (timeConflict)
             {
-                TempData["ErrorMessage"] = "Instructor has a time conflict with another class.";
-                return RedirectToAction("SectionTable");
+                TempData["ErrorMessage"] = "Instructor has a time conflict with another class in the same semester.";
+                return RedirectToAction("SectionTable", new { sectionId = section.SectionsId });
             }
+
 
             bool isStudentConflict = _context.Takes
                 .Include(t => t.Sections)
                     .ThenInclude(sec => sec.TimeSlot)
                 .Include(t => t.Student)
-                .Where(t => t.Student.UserId == userId && t.Sections.TimeSlot != null)
+                .Where(t =>
+                    t.Student.UserId == userId &&
+                    t.Sections.TimeSlot != null &&
+                    t.Sections.year == section.year &&
+                    t.Sections.Semester == section.Semester
+                )
                 .Any(t =>
                     t.Sections.TimeSlot.Day == section.TimeSlot.Day &&
                     section.TimeSlot.StartTime.TimeOfDay < t.Sections.TimeSlot.EndTime.TimeOfDay &&
@@ -1025,11 +1035,12 @@ namespace DebugModels.Controllers
 
             if (isStudentConflict)
             {
-                TempData["ErrorMessage"] = "Instructor is already a student in another class or this class at this time.";
-                return RedirectToAction("SectionTable");
+                TempData["ErrorMessage"] = "This user is already enrolled as a student in another class at the same time this semester.";
+                return RedirectToAction("SectionTable", new { sectionId = section.SectionsId });
             }
-    
-            
+
+
+
             var teaches = new Teaches
             {
                 InstructorId = instructorId,
@@ -1167,11 +1178,11 @@ namespace DebugModels.Controllers
             int currentYear = section.year;
             int currentSemester = section.Semester;
 
-            
+            // ترم قبل (برای محاسبه GPA)
             int previousSemester = currentSemester == 1 ? 2 : 1;
             int previousYear = currentSemester == 1 ? currentYear - 1 : currentYear;
 
-            
+            // 🧮 گرفتن دروس ترم قبل با نمره معتبر
             var previousTermCourses = student.Takes
                 .Where(t => t.Sections != null &&
                             t.Sections.year == previousYear &&
@@ -1181,23 +1192,21 @@ namespace DebugModels.Controllers
                 .ToList();
 
             double termGPA = 0;
-            int maxAllowedCredits = 20; 
+            int maxAllowedCredits = 20;
 
             if (previousTermCourses.Any())
             {
-                
                 var validCourses = previousTermCourses
-                    .Where(t => int.TryParse(t.Sections.Course.Unit, out _))  
+                    .Where(t => int.TryParse(t.Sections.Course.Unit, out _))
                     .Select(t => new
                     {
                         Unit = int.Parse(t.Sections.Course.Unit),
                         Grade = t.grade
-                    }).ToList();
+                    })
+                    .ToList();
 
-                
                 int totalUnits = validCourses.Sum(x => x.Unit);
                 double totalWeightedGrades = validCourses.Sum(x => x.Unit * x.Grade);
-
 
                 termGPA = totalUnits > 0 ? totalWeightedGrades / totalUnits : 0;
 
@@ -1209,24 +1218,30 @@ namespace DebugModels.Controllers
                     maxAllowedCredits = 24;
             }
 
-           
+            // ✅ فقط واحدهای همین ترم فعلی
             int totalCurrentCredits = student.Takes
-                .Where(t => t.Sections?.Course != null && int.TryParse(t.Sections.Course.Unit, out _))
+                .Where(t =>
+                    t.Sections?.Course != null &&
+                    int.TryParse(t.Sections.Course.Unit, out _) &&
+                    t.Sections.year == currentYear &&
+                    t.Sections.Semester == currentSemester
+                )
                 .Sum(t => int.Parse(t.Sections.Course.Unit));
 
-            
+            // ✅ واحد درس فعلی
             int sectionCredits = 0;
             if (section.Course?.Unit != null && int.TryParse(section.Course.Unit, out int parsedUnit))
             {
                 sectionCredits = parsedUnit;
             }
 
-            
+            // ✅ بررسی محدودیت نهایی
             if (totalCurrentCredits + sectionCredits > maxAllowedCredits)
             {
-                TempData["ErrorMessage"] = $"Student's GPA in previous term: {termGPA:F2}. Allowed max: {maxAllowedCredits} credits. Currently has {totalCurrentCredits} credits.";
+                TempData["ErrorMessage"] = $"Student's GPA in previous term: {termGPA:F2}. Max allowed: {maxAllowedCredits} credits. Currently has: {totalCurrentCredits}.";
                 return RedirectToAction("AssignStudent", new { sectionId });
             }
+
 
             int currentCount = _context.Takes.Count(t => t.SectionId == sectionId);
             int maxCapacity = section.ClassRoom.Capacity;
@@ -1285,8 +1300,8 @@ namespace DebugModels.Controllers
                  .Where(t =>
                      t.Student.UserId == userId &&
                      t.Sections.TimeSlot != null &&
-                     t.Sections.year == section.year &&            // 🔹 بررسی سال
-                     t.Sections.Semester == section.Semester       // 🔹 بررسی ترم
+                     t.Sections.year == section.year &&           
+                     t.Sections.Semester == section.Semester       
                  )
                  .Any(t =>
                      t.Sections.TimeSlot.Day == section.TimeSlot.Day &&
@@ -1302,22 +1317,37 @@ namespace DebugModels.Controllers
 
 
 
-            var prereqCourseIds = section.Course?.PreRegs.Select(pr => pr.PreRegCourseId).Where(id => id != null).Select(id => id.Value).ToList();
+            var prereqCourseIds = section.Course?.PreRegs
+                .Where(pr => pr.PreRegCourseId != null)
+                .Select(pr => pr.PreRegCourseId.Value)
+                .ToList();
 
             if (prereqCourseIds != null && prereqCourseIds.Any())
             {
-                var studentCompletedCourses = student.Takes
-                    .Where(t => t.Sections?.Course != null)
+                var passedOrCurrentPrereqs = student.Takes
+                    .Where(t =>
+                        t.Sections?.Course != null &&
+                        prereqCourseIds.Contains(t.Sections.Course.CourseId) &&
+                        (
+                            
+                            t.grade >= 10 ||
+
+                            
+                            (t.Sections.year == section.year && t.Sections.Semester == section.Semester)
+                        )
+                    )
                     .Select(t => t.Sections.Course.CourseId)
                     .ToList();
 
-                var missing = prereqCourseIds.Except(studentCompletedCourses).ToList();
+                var missing = prereqCourseIds.Except(passedOrCurrentPrereqs).ToList();
+
                 if (missing.Any())
                 {
-                    TempData["ErrorMessage"] = "Student has not completed prerequisite course(s) required for this class.";
+                    TempData["ErrorMessage"] = "Student must have passed or be currently enrolled in prerequisite course(s).";
                     return RedirectToAction("AssignStudent", new { sectionId });
                 }
             }
+
 
             bool instructorConflict = _context.Sections
                 .Include(s => s.TimeSlot)
@@ -1326,7 +1356,10 @@ namespace DebugModels.Controllers
                     s.Teaches != null &&
                     s.Teaches.Instructor != null &&
                     s.Teaches.Instructor.UserId == userId &&
-                    s.TimeSlot != null)
+                    s.TimeSlot != null &&
+                    s.year == section.year &&              
+                    s.Semester == section.Semester         
+                )
                 .Any(s =>
                     s.TimeSlot.Day == section.TimeSlot.Day &&
                     section.TimeSlot.StartTime.TimeOfDay < s.TimeSlot.EndTime.TimeOfDay &&
@@ -1335,9 +1368,10 @@ namespace DebugModels.Controllers
 
             if (instructorConflict)
             {
-                TempData["ErrorMessage"] = "This student is also an instructor at the same time in another class or this class.";
-                return RedirectToAction("SectionTable", new { sectionId });
+                TempData["ErrorMessage"] = "This student is also an instructor at the same time in another class during the same term.";
+                return RedirectToAction("AssignStudent", new { sectionId }); 
             }
+
 
 
             string courseTitle = section.Course?.Title?.Trim().ToLower();
