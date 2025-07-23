@@ -1154,6 +1154,7 @@ namespace DebugModels.Controllers
                         .ThenInclude(sec => sec.TimeSlot)
                 .FirstOrDefault(s => s.StudentId == studentId);
 
+
             if (student == null || student.UserId == null)
             {
                 TempData["ErrorMessage"] = "Student not found or has no associated user.";
@@ -1161,6 +1162,71 @@ namespace DebugModels.Controllers
             }
 
             int userId = student.UserId.Value;
+
+
+            int currentYear = section.year;
+            int currentSemester = section.Semester;
+
+            
+            int previousSemester = currentSemester == 1 ? 2 : 1;
+            int previousYear = currentSemester == 1 ? currentYear - 1 : currentYear;
+
+            
+            var previousTermCourses = student.Takes
+                .Where(t => t.Sections != null &&
+                            t.Sections.year == previousYear &&
+                            t.Sections.Semester == previousSemester &&
+                            t.grade >= 0 &&
+                            t.Sections.Course != null)
+                .ToList();
+
+            double termGPA = 0;
+            int maxAllowedCredits = 20; 
+
+            if (previousTermCourses.Any())
+            {
+                
+                var validCourses = previousTermCourses
+                    .Where(t => int.TryParse(t.Sections.Course.Unit, out _))  
+                    .Select(t => new
+                    {
+                        Unit = int.Parse(t.Sections.Course.Unit),
+                        Grade = t.grade
+                    }).ToList();
+
+                
+                int totalUnits = validCourses.Sum(x => x.Unit);
+                double totalWeightedGrades = validCourses.Sum(x => x.Unit * x.Grade);
+
+
+                termGPA = totalUnits > 0 ? totalWeightedGrades / totalUnits : 0;
+
+                if (termGPA < 12)
+                    maxAllowedCredits = 14;
+                else if (termGPA <= 17)
+                    maxAllowedCredits = 20;
+                else
+                    maxAllowedCredits = 24;
+            }
+
+           
+            int totalCurrentCredits = student.Takes
+                .Where(t => t.Sections?.Course != null && int.TryParse(t.Sections.Course.Unit, out _))
+                .Sum(t => int.Parse(t.Sections.Course.Unit));
+
+            
+            int sectionCredits = 0;
+            if (section.Course?.Unit != null && int.TryParse(section.Course.Unit, out int parsedUnit))
+            {
+                sectionCredits = parsedUnit;
+            }
+
+            
+            if (totalCurrentCredits + sectionCredits > maxAllowedCredits)
+            {
+                TempData["ErrorMessage"] = $"Student's GPA in previous term: {termGPA:F2}. Allowed max: {maxAllowedCredits} credits. Currently has {totalCurrentCredits} credits.";
+                return RedirectToAction("AssignStudent", new { sectionId });
+            }
 
             int currentCount = _context.Takes.Count(t => t.SectionId == sectionId);
             int maxCapacity = section.ClassRoom.Capacity;
@@ -1211,25 +1277,31 @@ namespace DebugModels.Controllers
                 return RedirectToAction("AssignStudent", new { sectionId });
             }
 
-            
+
             var conflict = _context.Takes
-                .Include(t => t.Sections)
-                    .ThenInclude(s => s.TimeSlot)
-                .Include(t => t.Student)
-                .Where(t => t.Student.UserId == userId && t.Sections.TimeSlot != null)
-                .Any(t =>
-                    t.Sections.TimeSlot.Day == section.TimeSlot.Day &&
-                    section.TimeSlot.StartTime.TimeOfDay < t.Sections.TimeSlot.EndTime.TimeOfDay &&
-                    section.TimeSlot.EndTime.TimeOfDay > t.Sections.TimeSlot.StartTime.TimeOfDay
-                );
+                 .Include(t => t.Sections)
+                     .ThenInclude(s => s.TimeSlot)
+                 .Include(t => t.Student)
+                 .Where(t =>
+                     t.Student.UserId == userId &&
+                     t.Sections.TimeSlot != null &&
+                     t.Sections.year == section.year &&            // 🔹 بررسی سال
+                     t.Sections.Semester == section.Semester       // 🔹 بررسی ترم
+                 )
+                 .Any(t =>
+                     t.Sections.TimeSlot.Day == section.TimeSlot.Day &&
+                     section.TimeSlot.StartTime.TimeOfDay < t.Sections.TimeSlot.EndTime.TimeOfDay &&
+                     section.TimeSlot.EndTime.TimeOfDay > t.Sections.TimeSlot.StartTime.TimeOfDay
+                 );
 
             if (conflict)
             {
-                TempData["ErrorMessage"] = "Time conflict detected with another class.";
+                TempData["ErrorMessage"] = "Time conflict detected with another class in the same term.";
                 return RedirectToAction("AssignStudent", new { sectionId });
             }
 
-            
+
+
             var prereqCourseIds = section.Course?.PreRegs.Select(pr => pr.PreRegCourseId).Where(id => id != null).Select(id => id.Value).ToList();
 
             if (prereqCourseIds != null && prereqCourseIds.Any())
@@ -1283,6 +1355,7 @@ namespace DebugModels.Controllers
                 return RedirectToAction("AssignStudent", new { sectionId });
             }
 
+            
 
 
 

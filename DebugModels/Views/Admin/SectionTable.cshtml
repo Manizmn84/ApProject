@@ -36,6 +36,7 @@
                     <tr>
                         <th>Course</th>
                         <th>Code</th>
+                        <th>Unit</th>
                         <th>Description</th>
                         <th>Room</th>
                         <th>Building</th>
@@ -53,21 +54,19 @@
                     {
                         var instructorUser = sec.Teaches?.Instructor?.User;
                         var hasInstructor = instructorUser != null;
-                        var days = string.Join(", ",
-                        group.Where(g => g.TimeSlot?.StartTime == sec.TimeSlot?.StartTime &&
-                        g.TimeSlot?.EndTime == sec.TimeSlot?.EndTime)
-                        .Select(s => s.TimeSlot?.Day)
-                        .Distinct());
+                        var day = sec.TimeSlot?.Day ?? "N/A";
+
 
                         <tr>
                             <td>@sec.Course?.Title</td>
                             <td>@sec.Code</td>
+                            <td>@sec.Course?.Unit</td>
                             <td>@sec.Description</td>
                             <td>@sec.ClassRoom?.RoomNumber</td>
                             <td>@sec.ClassRoom?.buliding</td>
                             <td>@sec.ClassRoom?.Capacity</td>
                             <td>@(sec.Takes?.Count() ?? 0)/@sec.ClassRoom?.Capacity</td>
-                            <td>@days</td>
+                            <td>@day</td>
                             <td>@sec.TimeSlot?.StartTime.ToString(@"hh\:mm") - @sec.TimeSlot?.EndTime.ToString(@"hh\:mm")</td>
                             <td>@sec.final_exam_date.ToString("yyyy-MM-dd")</td>
                             <td>
