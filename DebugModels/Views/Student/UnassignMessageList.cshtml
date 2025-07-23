@@ -1,8 +1,8 @@
 ﻿@model List<string>
 
 @{
-    ViewData["Title"] = "Message List";
-    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+    ViewData["Title"] = "Unassign Message List";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
 }
 
 @if (TempData["ErrorMessage"] != null)
@@ -21,7 +21,7 @@
     </div>
 }
 
-<h2>Appeal List</h2>
+<h2>Unassign Message List</h2>
 
 @if (Model == null || !Model.Any())
 {
@@ -34,7 +34,7 @@ else
         {
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 @email
-                <a href="@Url.Action("Objection", "Instructor", new { withEmail = email })" class="btn btn-primary btn-sm">
+                <a href="@Url.Action("UnassignMessage", "Student", new { withEmail = email })" class="btn btn-primary btn-sm">
                     View Chat
                 </a>
             </li>

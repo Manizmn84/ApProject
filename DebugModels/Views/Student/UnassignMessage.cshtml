@@ -1,14 +1,14 @@
 ﻿@model List<DebugModels.Models.RoleMessage>
 
 @{
-    ViewData["Title"] = "Chat";
+    ViewData["Title"] = "UnassignMessage";
     var currentEmail = ViewBag.CurrentUserEmail as string;
     var otherEmail = ViewBag.WithUserEmail as string ?? "Admin";
-    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
 
 }
 
-<h2>Appeal with @otherEmail</h2>
+<h2>UnassignMessage from @otherEmail</h2>
 
 @if (Model == null || !Model.Any())
 {

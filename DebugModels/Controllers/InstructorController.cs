@@ -189,6 +189,19 @@ public class InstructorController : Controller
             return RedirectToAction("ClassList");
         }
 
+        var takes = _context.Takes
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Course)
+                .Include(t => t.Student)
+                .FirstOrDefault(t => t.TakesId == takeId);
+        if (takes == null)
+        {
+            TempData["ErrorMessage"] = "Take is Not Found.";
+            return RedirectToAction("ClassList");
+        }
+
+        var sectionTitle = takes.Sections.Code;
+
         var result = await _InstructorService.RemoveStudent(takeId);
 
         if (!result.Success)
@@ -197,6 +210,13 @@ public class InstructorController : Controller
             return RedirectToAction("ClassList");
         }
 
+        var SendUnassignStudent = await _ChateService.SendMessage(new RoleMessage
+        {
+            Subject = "UnassignStudent",
+            Content = "you Unassign from section with Code : " + sectionTitle,
+            SenderId = instructor.UserId,
+            ReceiverId = takes.Student.UserId,
+        });
 
         return RedirectToAction("ClassList");
     }
@@ -644,7 +664,7 @@ public class InstructorController : Controller
                 .ThenInclude(s => s.User)
             .Include(t => t.Sections)
                 .ThenInclude(s => s.Teaches)
-            .Where(t => t.Sections.Teaches.InstructorId == instructorId)
+            .Where(t => t.Sections.Teaches.InstructorId == instructorId && t.Student.DepartmentId == instructor.DepartmentId)
             .Select(t => t.Student.User)
             .Distinct()
             .ToListAsync();
