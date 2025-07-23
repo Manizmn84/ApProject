@@ -107,7 +107,8 @@ public class StudentController : Controller
         }
 
         var student = _context.Students
-            .Include(i => i.Department)
+            .Include(s => s.User) 
+            .Include(s => s.Department)
             .FirstOrDefault(s => s.StudentId == profileId);
 
         if (student == null)

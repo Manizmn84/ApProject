@@ -756,7 +756,7 @@ namespace DebugModels.Controllers
             _context.SaveChanges();
 
             TempData["SuccessMessage"] = "Section created successfully.";
-            return RedirectToAction("SectionTable");
+            return View();
         }
 
         

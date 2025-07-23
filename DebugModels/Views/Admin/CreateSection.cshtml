@@ -2,6 +2,12 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewBag.Title = "Create Section";
 }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success text-center my-3">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+    </div>
+}
 
 <div class="container my-5">
     <div class="row justify-content-center">
