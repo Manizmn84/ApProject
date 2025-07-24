@@ -1178,11 +1178,11 @@ namespace DebugModels.Controllers
             int currentYear = section.year;
             int currentSemester = section.Semester;
 
-            // ترم قبل (برای محاسبه GPA)
+            
             int previousSemester = currentSemester == 1 ? 2 : 1;
             int previousYear = currentSemester == 1 ? currentYear - 1 : currentYear;
 
-            // 🧮 گرفتن دروس ترم قبل با نمره معتبر
+            
             var previousTermCourses = student.Takes
                 .Where(t => t.Sections != null &&
                             t.Sections.year == previousYear &&
@@ -1218,7 +1218,7 @@ namespace DebugModels.Controllers
                     maxAllowedCredits = 24;
             }
 
-            // ✅ فقط واحدهای همین ترم فعلی
+            
             int totalCurrentCredits = student.Takes
                 .Where(t =>
                     t.Sections?.Course != null &&
@@ -1228,14 +1228,14 @@ namespace DebugModels.Controllers
                 )
                 .Sum(t => int.Parse(t.Sections.Course.Unit));
 
-            // ✅ واحد درس فعلی
+            
             int sectionCredits = 0;
             if (section.Course?.Unit != null && int.TryParse(section.Course.Unit, out int parsedUnit))
             {
                 sectionCredits = parsedUnit;
             }
 
-            // ✅ بررسی محدودیت نهایی
+            
             if (totalCurrentCredits + sectionCredits > maxAllowedCredits)
             {
                 TempData["ErrorMessage"] = $"Student's GPA in previous term: {termGPA:F2}. Max allowed: {maxAllowedCredits} credits. Currently has: {totalCurrentCredits}.";
