@@ -1,84 +1,76 @@
 ﻿@model DebugModels.Models.ViewModels.LoginUserViewModel
 @{
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
     ViewData["Title"] = "Login";
 }
 
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    @TempData["ErrorMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    @TempData["SuccessMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-primary text-white text-center rounded-top-4">
-                    <h3 class="mb-0"><i class="bi bi-box-arrow-in-right me-2"></i>Login</h3>
-                </div>
-                <div class="card-body p-4">
-                    <form asp-action="LoginUsers" method="post" class="needs-validation" novalidate>
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label fw-semibold">Email</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input asp-for="Email" class="form-control" placeholder="example@domain.com" />
-                            </div>
-                            <span asp-validation-for="Email" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                                <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
-                            </div>
-                            <span asp-validation-for="Password" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Select Role</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" asp-for="Role" value="Instructor" id="instructor" />
-                                <label class="form-check-label" for="instructor">Instructor</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" asp-for="Role" value="Student" id="student" />
-                                <label class="form-check-label" for="student">Student</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" asp-for="Role" value="Admin" id="admin" />
-                                <label class="form-check-label" for="admin">Admin</label>
-                            </div>
-                            <span asp-validation-for="Role" class="text-danger small"></span>
-                        </div>
-
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-success btn-lg px-4 w-100 shadow-sm">
-                                <i class="bi bi-door-open-fill me-1"></i> Login
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="text-center mb-4">
+    <h3><i class="bi bi-box-arrow-in-right me-2"></i>Login</h3>
 </div>
+
+<form asp-action="LoginUsers" method="post" class="needs-validation" novalidate>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label fw-semibold">Email</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input asp-for="Email" class="form-control" placeholder="example@domain.com" />
+        </div>
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label fw-semibold">Password</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
+        </div>
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Select Role</label>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" asp-for="Role" value="Instructor" id="instructor" />
+            <label class="form-check-label" for="instructor">Instructor</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" asp-for="Role" value="Student" id="student" />
+            <label class="form-check-label" for="student">Student</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" asp-for="Role" value="Admin" id="admin" />
+            <label class="form-check-label" for="admin">Admin</label>
+        </div>
+        <span asp-validation-for="Role" class="text-danger small"></span>
+    </div>
+
+    <div class="text-center mt-4">
+        <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
+            <i class="bi bi-door-open-fill me-1"></i> Login
+        </button>
+    </div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+
 
