@@ -1,0 +1,38 @@
+﻿@model List<DebugModels.Models.RoleMessage>
+
+@{
+    ViewData["Title"] = "Chat";
+    var currentEmail = ViewBag.CurrentUserEmail as string;
+    var otherEmail = ViewBag.WithUserEmail as string ?? "Admin";
+    Layout = "~/Views/Shared/_InstructorLayout.cshtml";
+
+}
+
+<h2>Message from Admin</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <p>No messages found.</p>
+}
+else
+{
+    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        @foreach (var message in Model)
+        {
+            var senderEmail = message.Sender?.email ?? "Admin";
+            var isMine = senderEmail == currentEmail;
+            var alignment = isMine ? "flex-end" : "flex-start";
+            var bgColor = isMine ? "#d1e7dd" : "#f8d7da";
+            var textAlign = isMine ? "right" : "left";
+            var senderName = isMine ? "You" : senderEmail;
+
+            <div style="display: flex; justify-content: @alignment; margin-bottom: 10px;">
+                <div style="max-width: 60%; background-color: @bgColor; padding: 10px; border-radius: 10px; text-align: @textAlign;">
+                    <strong>@senderName</strong>
+                    <p style="margin: 5px 0;">@message.Content</p>
+                    <small>@message.SentAt.ToString("yyyy-MM-dd HH:mm")</small>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -1,6 +1,7 @@
 ﻿using DebugModels.Data;
 using DebugModels.Models;
 using DebugModels.Models.ViewModels;
+using DebugModels.Services.Chat;
 using DebugModels.Services.Course;
 using DebugModels.Services.Department;
 using DebugModels.Services.Instructor;
@@ -19,13 +20,15 @@ namespace DebugModels.Controllers
         private readonly IDepartmentService _departmentService;
         private readonly IInstructorService _InstructorService;
         private readonly IStudentService _StudentService;
-        public AdminController(ProjectContext context , ICourseService courseService, IDepartmentService departmentService,IInstructorService InstructorService,IStudentService studentService)
+        private readonly IChatService _chatservice;
+        public AdminController(ProjectContext context , ICourseService courseService, IDepartmentService departmentService,IInstructorService InstructorService,IStudentService studentService, IChatService chatService)
         {
             _context = context;
             _courseService = courseService;
             _departmentService = departmentService;
             _InstructorService = InstructorService;
             _StudentService = studentService;
+            _chatservice = chatService;
         }
 
         public bool IsCan()
@@ -1058,7 +1061,7 @@ namespace DebugModels.Controllers
         }
 
         [HttpPost]
-        public IActionResult UnassignInstructor(int sectionId)
+        public async Task<IActionResult> UnassignInstructor(int sectionId)
         {
             if (!IsCan())
             {
@@ -1074,14 +1077,21 @@ namespace DebugModels.Controllers
                 TempData["ErrorMessage"] = "Section not found.";
                 return RedirectToAction("SectionTable");
             }
-
+            int? UserId;
             if (section.Teaches != null)
             {
                 var teachesId = section.TeachesId;
-
-
+                var UserInstructor = _context.Instructors.Where(ins => ins.InstructorId == section.Teaches.InstructorId).FirstOrDefault();
+                UserId = UserInstructor.UserId;
                 section.TeachesId = null;
 
+                var result = await _chatservice.SendMessage(new RoleMessage
+                {
+                    Subject = "UnassignInstructor",
+                    Content = $"Unassign from Section : {section.Code}",
+                    SenderId = null,
+                    ReceiverId = UserId,
+                });
 
                 var teaches = _context.Teaches.FirstOrDefault(t => t.TeachesId == teachesId);
                 if (teaches != null)

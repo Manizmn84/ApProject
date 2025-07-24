@@ -708,4 +708,124 @@ public class InstructorController : Controller
 
         return RedirectToAction("AppealList");
     }
+
+    public async Task<IActionResult> UnassignInstructorList()
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var userId = instructor.UserId;
+
+        var messages = await _context.RoleMessages
+            .Include(rm => rm.Sender)
+            .Include(rm => rm.Receiver)
+            .Where(m =>
+                m.Subject == "UnassignInstructor" &&
+                (
+                    (m.SenderId == userId) ||
+                    (m.ReceiverId == userId) ||
+                    (m.SenderId == null && m.ReceiverId == userId) ||
+                    (m.ReceiverId == null && m.SenderId == userId)
+                )
+            )
+            .ToListAsync();
+
+
+
+        var chatUsersEmails = messages
+            .Select(m =>
+                m.SenderId == userId ? m.Receiver?.email :
+                m.ReceiverId == userId ? m.Sender?.email :
+                m.SenderId == null ? "root@gmail.com" :
+                m.ReceiverId == null ? "root@gmail.com" :
+                null
+            )
+            .Where(email => string.IsNullOrEmpty(email))
+            .Distinct()
+            .ToList();
+
+
+        return View(chatUsersEmails);
+    }
+
+    public async Task<IActionResult> UnassignInstructor(string withEmail)
+    {
+        var profileId = HttpContext.Session.GetInt32("ProfileId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (role != "Instructor" || profileId == null)
+        {
+            TempData["ErrorMessage"] = "Access denied. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var instructor = await _context.Instructors
+            .Include(i => i.Department)
+            .Include(i => i.User)
+            .Include(i => i.Teaches)
+            .FirstOrDefaultAsync(i => i.InstructorId == profileId);
+
+        if (instructor == null)
+        {
+            TempData["ErrorMessage"] = "instructor is Null. Please login.";
+            return RedirectToAction("LoginUsers", "Login");
+        }
+
+        var userId = instructor.UserId;
+
+        if (!string.IsNullOrEmpty(withEmail))
+        {
+            TempData["ErrorMessage"] = "email is Null";
+            return RedirectToAction("UnassignInstructorList");
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        //var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == withEmail.ToLower());
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User is Null";
+            return RedirectToAction("UnassignInstructorList");
+        }
+        //if (otherUser == null)
+        //{
+        //    TempData["ErrorMessage"] = "Other is Null";
+        //    return RedirectToAction("AppealList");
+        //}
+
+        var messages = await _context.RoleMessages
+            .Include(m => m.Sender)
+            .Include(m => m.Receiver)
+            .Where(m =>
+                m.Subject == "UnassignInstructor" &&
+                (
+                    (m.SenderId == null && m.ReceiverId == userId)
+                )
+            )
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+
+
+        ViewBag.WithUserEmail = withEmail;
+        ViewBag.CurrentUserEmail = user.email;
+
+        return View(messages);
+    }
 }
